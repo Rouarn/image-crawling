@@ -46,6 +46,76 @@
   }
 
   /**
+   * 进度日志工具：统一显示/隐藏/清空与渲染逻辑
+   * - show/hide 控制可见性
+   * - clear 清空当前内容
+   * - append 渲染结构化日志项（含图标与时间戳）
+   */
+  const progressLog = {
+    getBox() { return document.getElementById("progress"); },
+    show() {
+      const box = this.getBox();
+      if (!box) return;
+      box.classList.remove("hidden");
+      box.style.display = "";
+    },
+    hide() {
+      const box = this.getBox();
+      if (!box) return;
+      box.classList.add("hidden");
+      box.style.display = "none";
+    },
+    clear() {
+      const box = this.getBox();
+      if (!box) return;
+      box.textContent = "";
+    },
+    nowStr() {
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
+    },
+    icons: {
+      plan: "🗂️",
+      page: "📄",
+      fallback: "🛡️",
+      page_done: "✅",
+      discover: "🔎",
+      complete: "🎉",
+      error: "⚠️",
+    },
+    append(type, msg) {
+      const box = this.getBox();
+      if (!box) return;
+      const nearBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 8;
+      const row = document.createElement("div");
+      row.className = `log-item log-${type}`;
+      const icon = document.createElement("span");
+      icon.className = "icon";
+      icon.textContent = this.icons[type] || "ℹ️";
+      const text = document.createElement("span");
+      text.className = "text";
+      text.textContent = String(msg || "");
+      const time = document.createElement("span");
+      time.className = "time";
+      time.textContent = this.nowStr();
+      row.appendChild(icon);
+      row.appendChild(text);
+      row.appendChild(time);
+      box.appendChild(row);
+      const maxItems = 300;
+      while (box.children.length > maxItems) {
+        box.removeChild(box.firstChild);
+      }
+      if (nearBottom) {
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+  };
+
+  /**
    * 加载已下载图片并渲染到页面
    * 来源：GET /api/images
    * 渲染策略：
@@ -202,6 +272,8 @@
       btn.disabled = true;
       status.textContent = "正在抓取...";
       status.className = "status";
+      progressLog.clear();
+      progressLog.show();
       const formData = new FormData(form);
       const url = formData.get("url");
       const options = {
@@ -216,24 +288,56 @@
         endPage: formData.get("endPage")
           ? Number(formData.get("endPage"))
           : undefined,
+        useHeadless: form.querySelector('input[name="useHeadless"]')?.checked || undefined,
       };
       try {
-        const res = await fetch("/api/crawl", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, options }),
+        // 使用 SSE 实时显示进度
+        const qs = new URLSearchParams();
+        qs.set("url", String(url || ""));
+        Object.entries(options).forEach(([k,v]) => {
+          if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "请求失败");
-        status.textContent = `完成：发现 ${data.count} 张，已保存 ${
-          data.saved?.length || 0
-        } 张到 ${data.outDir}`;
-        status.className = "status ok";
-        await loadImages();
+        const es = new EventSource(`/api/crawl/stream?${qs.toString()}`);
+        es.onmessage = async (ev) => {
+          try {
+            const payload = JSON.parse(ev.data);
+            if (payload.type === "plan") {
+              progressLog.append("plan", `计划抓取 ${payload.pages} 页`);
+            } else if (payload.type === "page") {
+              progressLog.append("page", `抓取第 ${payload.index}/${payload.total} 页：${payload.url}`);
+            } else if (payload.type === "fallback") {
+              progressLog.append("fallback", `抓取失败，使用浏览器渲染尝试提取（原因：${payload.reason}）`);
+            } else if (payload.type === "page_done") {
+              progressLog.append("page_done", `页面完成，新增图片 ${payload.added} 张`);
+            } else if (payload.type === "discover") {
+              progressLog.append("discover", `共发现图片 ${payload.count} 张`);
+            } else if (payload.type === "complete") {
+              progressLog.append("complete", `下载完成：保存 ${payload.saved} 张到 ${payload.outDir}`);
+            } else if (payload.type === "result") {
+              const data = payload.result || {};
+              status.textContent = `完成：发现 ${data.count || 0} 张，已保存 ${data.saved?.length || 0} 张到 ${data.outDir || ''}`;
+              status.className = "status ok";
+              es.close();
+              await loadImages();
+              btn.disabled = false;
+            } else if (payload.type === "error") {
+              progressLog.append("error", `错误：${payload.error || '未知错误'}`);
+              status.textContent = `错误：${payload.error || '未知错误'}`;
+              status.className = "status error";
+              es.close();
+              btn.disabled = false;
+            }
+          } catch {}
+        };
+        es.onerror = () => {
+          status.textContent = "错误：进度连接中断";
+          status.className = "status error";
+          try { es.close(); } catch {}
+          btn.disabled = false;
+        };
       } catch (e) {
         status.textContent = `错误：${e.message || e}`;
         status.className = "status error";
-      } finally {
         btn.disabled = false;
       }
     });

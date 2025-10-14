@@ -188,6 +188,7 @@ button[disabled] {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 .status {
   margin-left: 12px;
@@ -438,3 +439,55 @@ body.dark .card {
 body.dark .site-footer {
   background: rgba(24, 28, 32, 0.7);
 }
+
+/* ========================= 抓取进度日志 ========================= */
+.progress-log {
+  width: 100%;
+  max-height: 160px;
+  overflow: auto;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 12px;
+  line-height: 1.6;
+}
+body.dark .progress-log {
+  background: #101317;
+}
+
+/* 进度条目设计 */
+.progress-log .log-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-left: 3px solid #cfd6df;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.7);
+}
+body.dark .progress-log .log-item {
+  background: rgba(16,19,23,0.6);
+}
+.progress-log .icon {
+  font-size: 14px;
+  line-height: 1.2;
+}
+.progress-log .text {
+  flex: 1;
+}
+.progress-log .time {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+/* 类型颜色 */
+.progress-log .log-plan { border-left-color: #2b7cff; }
+.progress-log .log-page { border-left-color: #64748b; }
+.progress-log .log-fallback { border-left-color: #f59e0b; }
+.progress-log .log-page_done { border-left-color: #22c55e; }
+.progress-log .log-discover { border-left-color: #845ef7; }
+.progress-log .log-complete { border-left-color: #16a34a; }
+.progress-log .log-error { border-left-color: #ef4444; }
