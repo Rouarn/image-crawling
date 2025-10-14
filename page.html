@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN" id="html">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="刘亮,die3881123@163.com" />
+    <meta name="description" content="这里是刘靓仔的个人主页" />
+    <meta name="copyright" content="本页所有内容的版权归刘亮所有" />
+    <meta name="keywords" content="我与夏季,summer,刘亮,个人博客,个人主页" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>我与夏季</title>
+    <link rel="icon" href="./img/Logo_Main_2108.ico" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/aboutMe.css" />
+    <link rel="stylesheet" href="css/works.css" />
+    <link rel="stylesheet" href="css/log.css" />
+    <link rel="stylesheet" href="css/footer.css" />
+    <link rel="stylesheet" href="css/navbar.css" />
+    <link rel="stylesheet" href="css/animate.min.css" />
+    <link rel="stylesheet" href="css/RCMenu.css" />
+    <link rel="stylesheet" href="css/iconfont.css" />
+    <link rel="stylesheet" href="css/FOOText.css" />
+    <link rel="stylesheet" href="css/sakuraDrops.css" />
+  </head>
+  <body>
+    <!-- 总体 -->
+    <div class="woyuxaiji light" id="woyuxaiji">
+      <!-- 开屏首页导航栏 -->
+      <nav id="navbar" class="navbar animate__animated">
+        <div class="center">
+          <div class="navLogoBox">
+            <a href="index.html">
+              <div class="navLogoMain" id="navLogoMain"></div>
+              <div class="navLogoText" id="navLogoText"></div>
+            </a>
+          </div>
+          <div class="navLinkBox" id="navLinkBox">
+            <a class="navLink" id="navLink1" href="#">首页</a>
+            <a class="navLink" id="navLink2" href="#about">关于</a>
+            <a class="navLink" id="navLink3" href="#works">作品</a>
+            <a class="navLink" id="navLink4" href="#log">日志</a>
+            <a class="navLink" id="navLink5" href="javascript:;">
+              <div class="lightColor" id="lightColor">
+                <div id="lightButton" class="lightButton"></div>
+              </div>
+              <div class="darkColor" id="darkColor">
+                <div id="DarkButton" class="darkButton"></div>
+              </div>
+            </a>
+          </div>
+          <!-- 此为引出屏幕宽度小于750px时所应用元素的按钮 -->
+          <span class="navLinkMarkBtn1" id="MarkBtnShow"></span>
+        </div>
+        <!-- 此间为屏幕宽度小于750px是所应用的元素 -->
+        <div class="navLinkMarkBox" id="navLinkMarkBox">
+          <div class="navLinkMark" id="LinkMark"></div>
+          <!-- 此为关闭屏幕宽度小于750px时所应用元素的按钮 -->
+          <span class="navLinkMarkBtn2" id="MarkBtnConceal"></span>
+          <!-- 此为sideListbox（侧边菜单）的遮罩层，用来控制点击空白处时（侧边菜单）背景的消失 -->
+          <div class="sideListboxMark" id="sideListboxMark"></div>
+          <div class="sideListbox" id="sideListbox">
+            <a class="sideList" id="sideList1" href="#">首页</a>
+            <a class="sideList" id="sideList2" href="#about">关于</a>
+            <a class="sideList" id="sideList3" href="#works">作品</a>
+            <a class="sideList" id="sideList4" href="#log">日志</a>
+            <hr class="dividingLine" />
+            <a class="sideList sideList5" id="sideList5" href="javascript:;"
+              >夏季
+              <span class="CurrentColorSystem" id="CurrentColorSystem"
+                >浅色</span
+              >
+            </a>
+            <a class="sideList sideList6" id="sideList6" href="javascript:;"
+              >夏季
+              <span class="CurrentColorSystem" id="darkColorSystem">深色</span>
+            </a>
+          </div>
+        </div>
+        <!-- 此上间为屏幕宽度小于750px是所应用的元素 -->
+      </nav>
+      <!-- 第一屏 -->
+      <div class="shouye" id="shouye">
+        <div class="topBg" id="topBg"></div>
+        <div class="topBgMask" id="topBgMask"></div>
+        <div class="DarkColorMask" id="DarkColorMask"></div>
+        <div class="topTitle">
+          <div class="topTitlebox">
+            <h1 class="animate__animated animate__pulse" id="h1">我与夏季.</h1>
+            <div class="underLinebox">
+              <span class="underLine" id="underLine"></span>
+            </div>
+            <h2 class="text" id="h2">
+              <span id="span1">/*</span>
+              <span id="h2Span">这里是刘靓仔的个人主页</span>
+              <span id="span2">*/</span>
+              <!-- <p id="sj"></p> -->
+            </h2>
+            <div class="currentTime" id="currentTime"></div>
+          </div>
+        </div>
+
+        <div class="scrollDown">
+          <a class="scrollDownIcon" href="#about"></a>
+        </div>
+      </div>
+      <!-- 樱花飘落 -->
+      <canvas style="display: block"></canvas>
+      <!-- 关于我 -->
+      <div class="about" id="about">
+        <h3 class="aboutH3">关于我</h3>
+        <div class="aboutUnderLinebox">
+          <div class="aboutUnderLine"></div>
+        </div>
+        <div class="tagBox">
+          <span>00后</span>
+          <span>XMFLS</span>
+          <span>NJU</span>
+          <span>小黑子</span>
+          <!-- 樱花飘落 -->
+          <span class="closeSakura" id="closeSakura">关闭樱花飘落</span>
+        </div>
+        <div class="aboutContent">
+          <p>嗨,我是刘亮。</p>
+          <p>一个练习时长两年半的前端艺术家</p>
+          <p>同时也是一名音乐爱好者、白日梦想家</p>
+          <p>某知名视频站的不知名UP主</p>
+          <p>强迫症、拖延症、懒癌晚期</p>
+          <p>PS:(这都不是真的,我非常的勤奋好学,真的)</p>
+          <p>在郑州度过最SB的高中三年</p>
+          <p>现就读于河南某大学软件系</p>
+          <p>热衷钻研与计算机有关的一切：</p>
+          <p>前端开发、平面设计、视频剪辑、吹牛逼等...</p>
+          <p>近期白日梦想：富婆包养我!</p>
+          <p>带着相机和好心情 与喜欢的人环游世界</p>
+          <p>请多指教！</p>
+        </div>
+      </div>
+      <!-- 我的作品 -->
+      <div class="works" id="works">
+        <h3 class="worksh3">我的作品</h3>
+        <div class="aboutUnderLinebox">
+          <div class="aboutUnderLine"></div>
+        </div>
+        <div class="workList">
+          <a href="http://ht.xinlian.pub/" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic1"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-汉唐资产</p>
+              <p class="workLinkIntro">独一无二、纯洁、浪漫、的爱与善良</p>
+              <p class="workLinkCat">全平台 予你</p>
+            </div>
+          </a>
+          <a href="http://yys.xinlian.pub/" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic2"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-阴阳师</p>
+              <p class="workLinkIntro">临摹、学习、定位简单使用</p>
+              <p class="workLinkCat">全平台 展示</p>
+            </div>
+          </a>
+          <a href="http://love.xinlian.pub/" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic3"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-Tips</p>
+              <p class="workLinkIntro">简洁、美观、实用的小Tips</p>
+              <p class="workLinkCat">全平台 应用</p>
+            </div>
+          </a>
+          <a href="http://bmd.xinlian.pub/" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic4"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-百慕大影城</p>
+              <p class="workLinkIntro">简洁、美观、实用的后台管理系统</p>
+              <p class="workLinkCat">全平台 线上应用</p>
+            </div>
+          </a>
+          <a
+            href="http://inis.ms.xinlian.pub/"
+            target="_blank"
+            class="workLink"
+          >
+            <div class="workLinkPic" id="workLinkPic5"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-inis博客系统前台</p>
+              <p class="workLinkIntro">简洁、美观、实用的个人起始页</p>
+              <p class="workLinkCat">全平台 线上应用</p>
+            </div>
+          </a>
+          <a href="http://inis.xinlian.pub/" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic6"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-inis博客系统后台</p>
+              <p class="workLinkIntro">简洁、美观、实用的个人起始页</p>
+              <p class="workLinkCat">全平台 线上应用</p>
+            </div>
+          </a>
+          <a href="http://xinlian.pub/" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic7"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-美食广场</p>
+              <p class="workLinkIntro">热门、推荐、时令尽享</p>
+              <p class="workLinkCat">全平台 线上应用</p>
+            </div>
+          </a>
+          <a href="https://github.com/Rouarn" target="_blank" class="workLink">
+            <div class="workLinkPic" id="workLinkPic8"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-Github仓库</p>
+              <p class="workLinkIntro">Github线上存储仓库</p>
+              <p class="workLinkCat">全平台 线上应用</p>
+            </div>
+          </a>
+          <a
+            href="https://gitee.com/woyuxiaji"
+            target="_blank"
+            class="workLink"
+          >
+            <div class="workLinkPic" id="workLinkPic9"></div>
+            <div class="workLinkText">
+              <p class="workLinkTitle">我与夏季-Gitee仓库</p>
+              <p class="workLinkIntro">Gitee线上存储仓库</p>
+              <p class="workLinkCat">全平台 线上应用</p>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- 日志 -->
+      <div class="log" id="log">
+        <h3>小站大记事</h3>
+        <div class="aboutUnderLinebox">
+          <div class="aboutUnderLine"></div>
+        </div>
+        <p class="tip">左右滑动来查看</p>
+        <div class="logBoxOuter">
+          <div class="logBox" id="logBox">
+            <div class="logTextbox">
+              <p class="logText1">2022.10.05</p>
+              <p class="logText2">注册域名「 woyuxaiji.top 」</p>
+            </div>
+            <div class="logTextbox">
+              <p class="logText1">2022.10.18</p>
+              <p class="logText2">域名完成 ICP 备案</p>
+            </div>
+            <div class="logTextbox">
+              <p class="logText1">2022.10.21</p>
+              <p class="logText2">网站 Beta 版界面上线</p>
+              <p class="logText2">正式对外发布</p>
+            </div>
+            <div class="logTextbox">
+              <p class="logText1">2022.11.18</p>
+              <p class="logText2">网站 1.0 版界面上线</p>
+            </div>
+            <!-- <div class="logTextbox">
+							<p class="logText1">2023.10.21</p>
+							<p class="logText2">一周年纪念</p>
+						</div> -->
+            <div class="logTextbox">
+              <p class="logText1">2022.12.06</p>
+              <p class="logText2">网站加入响应式界面框架</p>
+              <p class="logText2">适配移动设备</p>
+            </div>
+
+            <div class="logTextbox">
+              <p class="logText1">2022.12.06</p>
+              <p class="logText2">网站 2.0 版界面上线</p>
+            </div>
+            <!-- 	<div class="logTextbox">
+							<p class="logText1">2021.9.19</p>
+							<p class="logText2">网站架构重写</p>
+							<p class="logText2">3.0 版界面上线</p>
+						</div> -->
+            <div class="logTextbox">
+              <p class="logText1">2022.12.06</p>
+              <p class="logText2">网站新增深色主题</p>
+            </div>
+            <div class="logTextbox">
+              <p class="logText1">2022.12.15</p>
+              <p class="logText2">升级为 HTTPS 安全协议</p>
+            </div>
+            <div class="logTextbox">
+              <p class="logText3">TO BE</p>
+              <p class="logText3">CONTINUED...</p>
+            </div>
+          </div>
+          <span class="logMaskL"></span>
+          <span class="logMaskR"></span>
+        </div>
+      </div>
+      <!-- 底部 -->
+      <footer id="footer">
+        <div class="footbox">
+          <p>友情链接</p>
+          <a href="#" target="_blank">神剑已去，再无桎梏</a>
+          <br />
+          <a href="#" target="_blank">终焉之审判，就在此刻</a>
+          <br />
+          <a href="#" target="_blank">这是邪神的意志，是我的意志</a>
+          <br />
+          <a href="#" target="_blank">不如与我在这终末的哀歌下共舞到最后吧</a>
+          <br />
+          <a href="#" target="_blank"
+            >经一场大梦，梦中见满眼山花如翡，如见故人，喜不自胜。</a
+          >
+        </div>
+        <div class="footbox">
+          <p>与我联系</p>
+          <a href="mailto:die3881123@163.com">我的邮箱</a>
+          <br />
+          <a href="https://weibo.com/7269276678" target="_blank">我的微博</a>
+          <br />
+          <a href="https://space.bilibili.com/340928373" target="_blank">
+            我的哔哩哔哩频道
+          </a>
+          <br />
+          <!-- <a id="linkDonate" href="#">我与夏季</a> -->
+        </div>
+        <div class="copyright" id="copyright">
+          <p>© 2022 刘亮</p>
+          <div class="legalText">
+            <a id="linkCopyright">版权声明</a>
+            <br />
+            <a href="https://beian.miit.gov.cn/" target="_blank">
+              豫ICP备2024084155号-3
+            </a>
+            <br />
+            <span class="beian">
+              <img src="img/beian.png" />
+              <a href="https://beian.mps.gov.cn/#/query/webSearch?code=41172102000259" rel="noreferrer" target="_blank">豫公网安备41172102000259号</a>
+            </span>
+          </div>
+        </div>
+        <div class="statement">
+          <p>本页面创意来自「 https://maorx.cn/ 」毛若昕|静水流深</p>
+          <p>此为临摹</p>
+        </div>
+      </footer>
+
+      <!-- 返回顶部-->
+      <a href="#" class="backToTop" id="backToTop">
+        <span class="backJT"></span>
+        <span class="backTEXT">返回顶部</span>
+      </a>
+
+      <!-- 两种颜色主题 -->
+      <div class="container">
+        <!-- 白色主题菜单 -->
+        <section class="light">
+          <!-- Light Menu   ⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ -->
+          <div class="light-title"></div>
+          <ul class="light-menu-list">
+            <li>
+              <i class="iconfont icon-fuzhi"></i>
+              <span id="lightMenuList1">小黑子</span>
+            </li>
+            <li>
+              <i class="iconfont icon-niantie"></i>
+              <span id="lightMenuList2">唱,跳</span>
+            </li>
+            <li>
+              <i class="iconfont icon-jianqie"></i>
+              <span id="lightMenuList3">rap</span>
+            </li>
+            <li>
+              <i class="iconfont icon-xiazaidaoru"></i>
+              <span id="lightMenuList4">篮球</span>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <i class="iconfont icon-shanchu"></i>
+              <span id="lightMenuList5">你会吗</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 黑色主题菜单 -->
+        <section class="dark">
+          <!-- Dark Menu   ⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ -->
+          <div class="dark-title"></div>
+          <ul class="dark-menu-list">
+            <li>
+              <i class="iconfont icon-fuzhi"></i>
+              <span>Copy</span>
+            </li>
+            <li>
+              <i class="iconfont icon-niantie"></i>
+              <span>Paste</span>
+            </li>
+            <li>
+              <i class="iconfont icon-jianqie"></i>
+              <span>Cut</span>
+            </li>
+            <li>
+              <i class="iconfont icon-xiazaidaoru"></i>
+              <span>Download</span>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <i class="iconfont icon-shanchu"></i>
+              <span>Delete</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+      <!-- 主题切换动画 -->
+      <div class="Subject_switch"></div>
+    </div>
+    <!-- 用户事件弹出元素 -->
+    <div class="Alert"></div>
+
+    <!-- JS    ⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇⬇ -->
+
+    <!-- 引入jquery -->
+    <script src="./js/jquery.min.js"></script>
+    <!-- 首页 -->
+    <script src="./js/style.js"></script>
+    <!-- 关于 -->
+    <script src="./js/aboutMe.js"></script>
+    <!-- 导航栏 -->
+    <script src="./js/navbar.js"></script>
+    <!-- 底部 -->
+    <script src="./js/footer.js"></script>
+    <!-- 双色右键菜单 -->
+    <script src="js/RCMenu.js"></script>
+    <!-- 随机背景 -->
+    <!-- <script src="js/RandomBg.js"></script> -->
+    <!-- 樱花飘落 -->
+    <script src="./js/SakuraDrops.js"></script>
+    <!-- WOW.js -->
+    <script src="./js/wow.min.js"></script>
+    <script>
+      new WOW().init();
+    </script>
+  </body>
+</html>
