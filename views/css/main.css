@@ -138,11 +138,6 @@ form#crawl-form {
   gap: 14px;
 }
 
-/* :nth-child */
-.grid :nth-child(1) {
-  margin-top: 20px;
-}
-
 @media (max-width: 780px) {
   .grid {
     grid-template-columns: 1fr;
@@ -541,6 +536,7 @@ body.dark .progress-log .log-item {
 .headers-field {
   position: relative;
   padding: 10px 12px;
+  margin-top: 20px;
   border: 1px dashed var(--border);
   border-radius: 10px;
   background: linear-gradient(
