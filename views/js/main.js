@@ -1,5 +1,24 @@
-/* 交互脚本：触发抓取与展示下载列表 */
+/*
+  前端交互主脚本
+  职责总览：
+  - 加载已下载图片列表：GET /api/images，按目录分组渲染缩略图网格。
+  - 表单提交抓取任务：POST /api/crawl，展示进度状态与结果统计，并刷新列表。
+  - 主题切换与持久化：light/dark 两种主题，存储于 localStorage。
+  - 图片预览模态层：缩略图点击弹出大图，支持遮罩点击与 ESC 关闭。
+  事件流简介：
+  - DOMContentLoaded → setupForm() → 注册输入联动/提交事件；
+  - DOMContentLoaded → loadImages() → 初次拉取并渲染图片；
+  - 用户提交表单 → POST /api/crawl → 成功后再次 loadImages()；
+  - 用户点击缩略图 → 打开预览 → 点击遮罩/关闭或按 ESC → 关闭预览。
+*/
 (function () {
+  /**
+   * 加载已下载图片并渲染到页面
+   * 来源：GET /api/images
+   * 渲染策略：
+   * - 若返回包含 groups（按顶层子目录分组），则生成“目录标签”控件与对应网格。
+   * - 否则兼容旧结构的 files 扁平数组，直接渲染所有缩略图。
+   */
   async function loadImages() {
     try {
       const res = await fetch("/api/images");
@@ -70,12 +89,23 @@
     }
   }
 
+  /**
+   * 初始化抓取表单交互：
+   * - 根据 URL 自动派生输出目录（outDir），避免用户重复输入；
+   * - 监听提交并组装 options，发送到 /api/crawl；
+   * - 展示状态文本与错误信息，并在成功后刷新图片列表。
+   */
   function setupForm() {
     const form = document.getElementById("crawl-form");
     if (!form) return;
     // 根据 URL 自动填充输出目录：取路径最后一段，去掉后缀并规范化
     const urlInput = form.querySelector('input[name="url"]');
     const outDirInput = form.querySelector('input[name="outDir"]');
+    /**
+     * 从原始 URL 文本派生稳定的目录名：
+     * - 首选使用 URL 的最后路径段；若为空再回退到域名（去除 www.）；
+     * - 清理查询/片段，移除文件后缀，归一化为小写短横线形式。
+     */
     const deriveOutDir = raw => {
       if (!raw) return "";
       let pathname = "";
@@ -174,6 +204,7 @@
     loadImages();
     // 主题初始化与切换
     const btn = document.getElementById("theme-toggle");
+    /** 切换主题并持久化到 localStorage */
     const applyTheme = theme => {
       document.body.classList.toggle("dark", theme === "dark");
       localStorage.setItem("theme", theme);
@@ -192,12 +223,14 @@
     const modal = document.getElementById("preview-modal");
     const modalImg = document.getElementById("preview-img");
     const closeBtn = modal ? modal.querySelector(".close") : null;
+    /** 打开预览模态层并设置图片地址 */
     const openPreview = src => {
       if (!modal || !modalImg) return;
       modalImg.src = src;
       modal.classList.add("show");
       modal.setAttribute("aria-hidden", "false");
     };
+    /** 关闭预览模态层并清理状态 */
     const closePreview = () => {
       if (!modal || !modalImg) return;
       modal.classList.remove("show");

@@ -1,3 +1,8 @@
+/**
+ * 抓取与下载核心逻辑模块
+ * 职责：分页解析、图片 URL 提取、并发下载与抓取协调。
+ * 所有日志与错误信息均为中文，便于国内用户理解。
+ */
 import fetch from "node-fetch";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -9,6 +14,9 @@ import { STORAGE_ROOT, ensureDir } from "./config.js";
 
 const streamPipeline = promisify(pipeline);
 
+/**
+ * 统一请求头（模拟常见浏览器 UA）。
+ */
 function defaultHeaders() {
   return {
     "user-agent":
@@ -17,10 +25,19 @@ function defaultHeaders() {
   };
 }
 
+/**
+ * 延时 Promise。
+ * @param {number} ms 毫秒
+ */
 function delay(ms = 0) {
   return new Promise(res => setTimeout(res, ms));
 }
 
+/**
+ * 根据 Content-Type 推断图片扩展名。
+ * @param {string|null} ct Content-Type
+ * @returns {string} 扩展名（不含点）
+ */
 function extFromContentType(ct) {
   if (!ct) return "";
   if (ct.includes("jpeg")) return "jpg";
@@ -32,6 +49,11 @@ function extFromContentType(ct) {
   return "";
 }
 
+/**
+ * 从 URL 推断文件名（可能不含扩展名）。
+ * @param {string} u 图片 URL
+ * @returns {string} 文件名
+ */
 function filenameFromUrl(u) {
   try {
     const p = new URL(u).pathname;
@@ -42,6 +64,13 @@ function filenameFromUrl(u) {
   }
 }
 
+/**
+ * 下载单张图片并避免文件名冲突。
+ * @param {string} u 图片 URL
+ * @param {string} outDir 输出目录
+ * @param {Set<string>} usedNames 已使用文件名集合
+ * @returns {Promise<string>} 保存的文件名
+ */
 async function downloadImage(u, outDir, usedNames) {
   const controller = new AbortController();
   const timeoutMs = 15000;
@@ -74,6 +103,12 @@ async function downloadImage(u, outDir, usedNames) {
   return final;
 }
 
+/**
+ * 从页面中提取图片 URL（包含 img/src 与 srcset）。
+ * @param {*} $ cheerio 实例
+ * @param {string} pageUrl 页面 URL（用于补全相对地址）
+ * @param {Set<string>} urlsSet 去重集合
+ */
 function extractImages($, pageUrl, urlsSet) {
   $("img").each((_, el) => {
     const src = $(el).attr("src");
@@ -98,6 +133,9 @@ function extractImages($, pageUrl, urlsSet) {
   });
 }
 
+/**
+ * 解析下一页 URL（rel=next / 类名 next / 文本匹配）。
+ */
 function findNextUrl($, currentUrl) {
   const relNext = $("a[rel='next']").attr("href");
   if (relNext) return new URL(relNext, currentUrl).href;
@@ -114,6 +152,12 @@ function findNextUrl($, currentUrl) {
   return candidate;
 }
 
+/**
+ * 解析分页列表：优先使用 pagePattern，否则跟随“下一页”。
+ * @param {string} baseUrl 起始页面
+ * @param {*} opts 抓取选项
+ * @returns {Promise<string[]>} 页面列表
+ */
 async function resolvePages(baseUrl, opts = {}) {
   if (opts.pagePattern) {
     const start = Number(opts.startPage || 1);
@@ -156,6 +200,13 @@ async function resolvePages(baseUrl, opts = {}) {
   return pages;
 }
 
+/**
+ * 并发下载图片列表。
+ * @param {string[]} list 图片 URL 列表
+ * @param {string} outDir 输出目录
+ * @param {*} opts 包含并发数
+ * @returns {Promise<Array<{url:string,file:string}>>}
+ */
 async function downloadAll(list, outDir, opts) {
   const usedNames = new Set();
   const concurrency = Number(opts.concurrency || 5);
@@ -177,6 +228,11 @@ async function downloadAll(list, outDir, opts) {
   return saved;
 }
 
+/**
+ * 协调抓取流程（分页解析 → 图片提取 → 并发下载）。
+ * @param {string} baseUrl 目标页面 URL
+ * @param {*} opts 抓取选项
+ */
 export async function crawlImagesWithPagination(baseUrl, opts) {
   const outDirRel = opts.outDir || "images";
   const outDir = path.isAbsolute(outDirRel)

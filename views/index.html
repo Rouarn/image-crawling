@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
+    <!-- 站点头部：品牌与主题切换 -->
     <header class="site-header">
       <div class="container nav">
         <div class="brand">📸 图片抓取器</div>
@@ -16,6 +17,7 @@
       </div>
     </header>
     <main>
+      <!-- 快速开始：简要说明与引导 -->
       <section class="section">
         <div class="card hero">
           <h2>快速开始</h2>
@@ -25,11 +27,13 @@
           </p>
         </div>
       </section>
+      <!-- 抓取配置：提交到 /api/crawl，main.js 负责监听与提交 -->
       <section class="section">
         <div class="card">
           <h2>抓取配置</h2>
           <p class="muted">支持分页模式与自动“下一页”，可配置并发与延迟。</p>
           <form id="crawl-form">
+            <!-- 网格布局：表单字段两列排列，窄屏自适应为单列 -->
             <div class="grid">
               <label>
                 目标页面 URL
@@ -84,6 +88,11 @@
       <section class="section">
         <div class="card">
           <h2>已下载图片</h2>
+          <!--
+            图片容器：由 main.js 的 loadImages() 填充。
+            · 当存在多目录时，会注入目录切换控件（images-controls）与网格（.images）。
+            · 否则按旧结构 files 扁平列表直接渲染缩略图。
+          -->
           <div id="images" class="images"></div>
         </div>
       </section>
@@ -122,6 +131,12 @@
       </div>
     </footer>
 
+    <!--
+      前端交互脚本：
+      - 初始化表单与主题，拉取 /api/images 列表；
+      - 处理 /api/crawl 提交并刷新图片列表；
+      - 缩略图点击预览与 ESC 关闭。
+    -->
     <script src="./js/main.js" defer></script>
   </body>
 </html>

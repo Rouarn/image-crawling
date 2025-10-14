@@ -1,3 +1,15 @@
+/*
+  样式总览（main.css）
+  - 主题变量：:root 与 body.dark 中的颜色/阴影变量，提供浅色与深色主题切换。
+  - 基础重置：盒模型与 html/body 的 margin/padding 清理。
+  - 布局与卡片：main 容器宽度、.card 统一卡片风格。
+  - 表单样式：网格栅格 .grid、输入框与提交按钮状态、状态文本样式。
+  - 图片列表与缩略图：.images 网格与 .thumb 缩略卡片、悬浮反馈。
+  - 模态层预览：.modal/.modal-inner 的遮罩与内容容器，以及关闭按钮。
+  - 头部与导航：.site-header、.container、.nav、.brand 与主题切换按钮 .toggle。
+  - 分组与目录切换：.images-controls（标签按钮 .tab 与下拉 .dir-select）。
+  - 页脚：.site-footer 的边框与背景适配。
+*/
 /* 全局主题与重置 */
 :root {
   --bg: #f6f7f9;
@@ -26,7 +38,7 @@ body {
   color: var(--text);
 }
 
-/* 顶部 */
+/* 顶部：旧版 header（保留）与新 .site-header 配合使用 */
 header {
   background: #222;
   color: #fff;
@@ -38,7 +50,7 @@ header h1 {
   margin: 0;
 }
 
-/* 布局 */
+/* 布局：主内容容器宽度与边距 */
 main {
   max-width: 1000px;
   margin: 24px auto;
@@ -57,7 +69,7 @@ main {
   margin-top: 24px;
 }
 
-/* 表单 */
+/* 表单：栅格布局与输入交互反馈 */
 form#crawl-form {
   display: block;
 }
@@ -125,7 +137,7 @@ button[disabled] {
   color: #d32f2f;
 }
 
-/* 图片列表 */
+/* 图片列表：自适应网格与缩略卡片 */
 .images {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -159,7 +171,7 @@ button[disabled] {
   text-overflow: ellipsis;
 }
 
-/* 杂项与说明 */
+/* 杂项与说明：标题、描述与指引列表 */
 h2 {
   font-size: 16px;
   margin: 0 0 8px;
@@ -181,7 +193,7 @@ ul.guides {
   font-size: 13px;
 }
 
-/* 图片预览模态层 */
+/* 图片预览模态层：居中弹出与关闭按钮 */
 .modal {
   position: fixed;
   inset: 0;
@@ -228,7 +240,7 @@ ul.guides {
   background: #f2f4f7;
 }
 
-/* 暗色适配 */
+/* 暗色适配：覆盖变量与组件视觉 */
 body.dark .modal-inner {
   background: #181c20;
   border-color: #2e333a;
@@ -239,7 +251,7 @@ body.dark .modal .close {
   border-color: #2e333a;
 }
 
-/* 站点头部与导航 */
+/* 站点头部与导航：品牌与主题开关 */
 .site-header {
   background: linear-gradient(90deg, #2b7cff, #845ef7);
   color: #fff;
@@ -272,12 +284,12 @@ body.dark .modal .close {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Hero 区块 */
+/* Hero 区块：顶部卡片的柔和渐变背景 */
 .hero {
   background: linear-gradient(180deg, #ffffff, #f8f9fb);
 }
 
-/* 页脚 */
+/* 页脚：轻量边框与背景半透明适配 */
 .site-footer {
   margin-top: 24px;
   padding: 16px 0;
@@ -289,7 +301,7 @@ body.dark .modal .close {
   font-size: 13px;
 }
 
-/* 暗色主题变量覆盖与适配 */
+/* 暗色主题变量覆盖与适配：统一暗色方案与组件阴影 */
 body.dark {
   --bg: #121417;
   --text: #e6e8eb;
@@ -319,7 +331,7 @@ body.dark .card {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-/* 分组展示 */
+/* 分组展示：每个目录块的标题与间距（兼容旧结构） */
 .group {
   margin-bottom: 16px;
 }
@@ -329,8 +341,7 @@ body.dark .card {
   margin: 8px 0;
 }
 
-/* 目录标签（多文件夹切换） */
-/* 多目录下拉选择器 */
+/* 目录切换控件：标签（tabs）与下拉（dir-select） */
 .images-controls {
   display: flex;
   flex-wrap: wrap;
@@ -352,7 +363,7 @@ body.dark .images-controls .dir-select {
   border-color: #2e333a;
 }
 
-/* 横向标签按钮（tabs）用于目录切换 */
+/* 标签按钮（tabs）：当前状态与暗色适配 */
 .images-controls .tab {
   padding: 6px 10px;
   font-size: 13px;
