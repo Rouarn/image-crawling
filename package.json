@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node app.js"
+    "start": "node ./server/app.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,7 @@
   "packageManager": "pnpm@10.18.2",
   "dependencies": {
     "node-fetch": "^3.3.2",
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.19.2"
   }
 }

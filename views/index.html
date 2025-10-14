@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>图片抓取器</title>
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <header>
+      <h1>图片抓取器</h1>
+    </header>
+    <main>
+      <form id="crawl-form">
+        <div class="grid">
+          <label>
+            目标页面 URL
+            <input name="url" placeholder="https://example.com" required />
+          </label>
+          <label>
+            输出目录
+            <input name="outDir" placeholder="images" />
+          </label>
+          <label>
+            最大页数
+            <input name="maxPages" type="number" min="1" value="5" />
+          </label>
+          <label>
+            并发下载数
+            <input name="concurrency" type="number" min="1" value="6" />
+          </label>
+          <label>
+            页面延迟 (ms)
+            <input name="pageDelayMs" type="number" min="0" value="500" />
+          </label>
+          <label>
+            分页模式 (可选)
+            <input
+              name="pagePattern"
+              placeholder="https://site.com/list?page={page}"
+            />
+          </label>
+          <label>
+            起始页 (可选)
+            <input name="startPage" type="number" min="1" />
+          </label>
+          <label>
+            结束页 (可选)
+            <input name="endPage" type="number" min="1" />
+          </label>
+        </div>
+        <button type="submit">开始抓取</button>
+        <span id="status" class="status"></span>
+      </form>
+
+      <section class="section">
+        <div class="card">
+          <h2>已下载图片</h2>
+          <div id="images" class="images"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/js/main.js" defer></script>
+  </body>
+</html>
