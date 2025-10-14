@@ -7,6 +7,8 @@ import { pipeline } from "node:stream";
 import { promisify } from "node:util";
 
 const streamPipeline = promisify(pipeline);
+// 统一存储父级目录
+const STORAGE_ROOT = path.resolve("storage");
 
 /**
  * 确保输出目录存在（递归创建）。
@@ -85,75 +87,18 @@ async function downloadImage(u, outDir, usedNames) {
   return final;
 }
 
-/**
- * 抓取页面中的所有图片链接并并发下载到本地。
- * 解析范围：<img> 的 src 与 srcset（忽略 data: 内联图片）。
- * 并发：使用固定数量的“工作协程”拉取队列。
- * @param {string} baseUrl 页面 URL
- * @param {string} [outDir='images'] 输出目录
- * @returns {Promise<void>}
- */
-async function crawlImages(baseUrl, outDir = "images") {
-  ensureDir(outDir);
-  const pageRes = await fetch(baseUrl);
-  if (!pageRes.ok) throw new Error(`Fetch page failed: ${pageRes.status}`);
-  const html = await pageRes.text();
-  const $ = load(html);
-  const urls = new Set();
-
-  // 提取 <img> 的 src 属性并标准化为绝对 URL
-  $("img").each((_, el) => {
-    const src = $(el).attr("src");
-    if (src) {
-      try {
-        const abs = new URL(src, baseUrl).href;
-        if (!abs.startsWith("data:")) urls.add(abs);
-      } catch {}
-    }
-    // 解析 srcset：可能包含多个 URL（以逗号分隔，后带密度说明如 2x）
-    const srcset = $(el).attr("srcset");
-    if (srcset) {
-      srcset.split(",").forEach(part => {
-        const urlPart = part.trim().split(" ")[0];
-        if (urlPart) {
-          try {
-            const abs2 = new URL(urlPart, baseUrl).href;
-            if (!abs2.startsWith("data:")) urls.add(abs2);
-          } catch {}
-        }
-      });
-    }
-  });
-
-  const list = [...urls];
-  console.log(`Found ${list.length} image(s).`);
-  const usedNames = new Set();
-
-  // 简单的固定并发控制：启动 5 个“工作协程”
-  const concurrency = 5;
-  let index = 0;
-  const workers = Array.from({ length: concurrency }, async () => {
-    while (index < list.length) {
-      const i = index++;
-      const u = list[i];
-      try {
-        await downloadImage(u, outDir, usedNames);
-      } catch (e) {
-        console.error(`Failed: ${u}`, e.message || e);
-      }
-    }
-  });
-  await Promise.all(workers);
-  console.log("All done.");
-}
-
 // ============ Web Server ============
+// 确保 storage 根目录存在
+ensureDir(STORAGE_ROOT);
 const app = express();
 app.use(express.json());
 // 为视图目录提供静态资源服务（CSS/JS）
 app.use(express.static(path.resolve("views")));
 // 静态资源：图片目录与视图页面
-app.use("/images", express.static(path.resolve("images")));
+// 将 /images 静态路由指向 storage/images
+app.use("/images", express.static(path.join(STORAGE_ROOT, "images")));
+// 提供整个 storage 目录的静态访问，便于前端访问各子目录
+app.use("/storage", express.static(STORAGE_ROOT));
 app.get("/", (req, res) => {
   const filePath = path.join(process.cwd(), "views", "index.html");
   res.sendFile(filePath);
@@ -183,10 +128,33 @@ app.post("/api/crawl", async (req, res) => {
 // API：列出已下载图片
 app.get("/api/images", (req, res) => {
   try {
-    const dir = path.resolve("images");
-    ensureDir(dir);
-    const files = fs.readdirSync(dir).filter(f => !f.startsWith("."));
-    res.json({ files });
+    const root = STORAGE_ROOT;
+    ensureDir(root);
+    const exts = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"]);
+    const groups = new Map();
+    const pushFile = (relPath, relBase) => {
+      const top = relBase ? relBase.split("/")[0] : "root";
+      if (!groups.has(top)) groups.set(top, []);
+      groups.get(top).push(relPath);
+    };
+    const walk = (dir, rel = "") => {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const ent of entries) {
+        if (ent.name.startsWith(".")) continue;
+        const abs = path.join(dir, ent.name);
+        const relPath = rel ? `${rel}/${ent.name}` : ent.name;
+        if (ent.isDirectory()) {
+          walk(abs, relPath);
+        } else {
+          const ext = path.extname(ent.name).toLowerCase();
+          if (exts.has(ext)) pushFile(relPath, rel);
+        }
+      }
+    };
+    walk(root);
+    const result = Array.from(groups.entries()).map(([dir, files]) => ({ dir, files }));
+    const total = result.reduce((acc, g) => acc + g.files.length, 0);
+    res.json({ groups: result, total });
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
   }
@@ -325,7 +293,12 @@ async function downloadAll(list, outDir, opts) {
 }
 
 async function crawlImagesWithPagination(baseUrl, opts) {
-  const outDir = opts.outDir || "images";
+  // 将 outDir 解析到 storage 下（支持绝对路径透传）
+  const outDirRel = opts.outDir || "images";
+  const outDir = path.isAbsolute(outDirRel)
+    ? outDirRel
+    : path.join(STORAGE_ROOT, outDirRel);
+  ensureDir(STORAGE_ROOT);
   ensureDir(outDir);
   const urls = new Set();
   const pages = await resolvePages(baseUrl, opts);
@@ -349,6 +322,10 @@ async function crawlImagesWithPagination(baseUrl, opts) {
   console.log(`Found ${list.length} image(s) across pages.`);
   const saved = await downloadAll(list, outDir, opts);
   console.log("All done.");
-  return { count: list.length, saved, outDir };
+  return {
+    count: list.length,
+    saved,
+    outDir: path.relative(process.cwd(), outDir),
+  };
 }
 import express from "express";

@@ -151,6 +151,53 @@ p.muted { font-size: 13px; color: var(--muted); margin: 6px 0 12px; }
 label small { font-size: 12px; color: var(--muted); margin-top: 6px; }
 ul.guides { margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
 
+/* 图片预览模态层 */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal.show { display: flex; }
+.modal-inner {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+}
+.modal-inner img {
+  display: block;
+  max-width: 86vw;
+  max-height: 80vh;
+  border-radius: 8px;
+}
+.modal .close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #333;
+  border-radius: 20px;
+  width: 28px;
+  height: 28px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+.modal .close:hover { background: #f2f4f7; }
+
+/* 暗色适配 */
+body.dark .modal-inner { background: #181c20; border-color: #2e333a; }
+body.dark .modal .close { background: #1f2429; color: #e6e8eb; border-color: #2e333a; }
+
 /* 站点头部与导航 */
 .site-header {
   background: linear-gradient(90deg, #2b7cff, #845ef7);
@@ -208,3 +255,29 @@ body.dark .site-footer { background: rgba(24,28,32,0.7); }
 body.dark input { background: #101317; border-color: #2e333a; color: var(--text); }
 body.dark .thumb { background: #1a1f24; border-color: #2e333a; }
 body.dark .card { box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+
+/* 分组展示 */
+.group { margin-bottom: 16px; }
+.group-title { font-size: 14px; color: var(--muted); margin: 8px 0; }
+
+/* 目录标签（多文件夹切换） */
+/* 多目录下拉选择器 */
+.images-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.images-controls .dir-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #334;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+body.dark .images-controls .dir-select {
+  background: #101317;
+  color: var(--text);
+  border-color: #2e333a;
+}

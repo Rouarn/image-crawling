@@ -10,14 +10,19 @@
     <header class="site-header">
       <div class="container nav">
         <div class="brand">📸 图片抓取器</div>
-        <button id="theme-toggle" class="toggle" aria-label="切换主题">🌙</button>
+        <button id="theme-toggle" class="toggle" aria-label="切换主题">
+          🌙
+        </button>
       </div>
     </header>
     <main>
       <section class="section">
         <div class="card hero">
           <h2>快速开始</h2>
-          <p class="muted">填写目标页面，支持自动“下一页”和分页模式占位符 {page}，并发与延迟可调。</p>
+          <p class="muted">
+            填写目标页面，支持自动“下一页”和分页模式占位符
+            {page}，并发与延迟可调。
+          </p>
         </div>
       </section>
       <section class="section">
@@ -34,7 +39,7 @@
               <label>
                 输出目录
                 <input name="outDir" placeholder="images" />
-                <small>默认保存到 images 目录</small>
+                <small>默认保存到 storage/images 目录</small>
               </label>
               <label>
                 最大页数
@@ -75,7 +80,7 @@
           </form>
         </div>
       </section>
-
+      <!-- 已下载图片展示 -->
       <section class="section">
         <div class="card">
           <h2>已下载图片</h2>
@@ -83,12 +88,29 @@
         </div>
       </section>
 
+      <!-- 预览模态层 -->
+      <div
+        id="preview-modal"
+        class="modal"
+        aria-hidden="true"
+        role="dialog"
+        aria-label="图片预览"
+      >
+        <div class="modal-inner">
+          <button class="close" aria-label="关闭预览">×</button>
+          <img id="preview-img" alt="预览图" />
+        </div>
+      </div>
+
       <section class="section">
         <div class="card">
           <h2>使用说明</h2>
           <ul class="guides">
             <li>直接填写目标页面 URL 可自动识别常见“下一页”。</li>
-            <li>若站点不规范或跨域分页，请使用“分页模式”示例： https://site.com/list?page={page}。</li>
+            <li>
+              若站点不规范或跨域分页，请使用“分页模式”示例：
+              https://site.com/list?page={page}。
+            </li>
             <li>起始页与结束页仅在填写“分页模式”时生效。</li>
           </ul>
         </div>
@@ -100,6 +122,6 @@
       </div>
     </footer>
 
-    <script src="/js/main.js" defer></script>
+    <script src="./js/main.js" defer></script>
   </body>
 </html>

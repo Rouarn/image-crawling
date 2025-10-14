@@ -6,19 +6,70 @@
       const data = await res.json();
       const box = document.getElementById("images");
       box.innerHTML = "";
-      (data.files || []).forEach(f => {
-        const div = document.createElement("div");
-        div.className = "thumb";
-        const img = document.createElement("img");
-        img.loading = "lazy";
-        img.src = "/images/" + encodeURIComponent(f);
-        img.alt = f;
-        const cap = document.createElement("div");
-        cap.textContent = f;
-        div.appendChild(img);
-        div.appendChild(cap);
-        box.appendChild(div);
-      });
+      const groups = data.groups;
+      // 多目录展示方案：使用下拉选择器切换目录，避免纵向堆叠导致页面超高
+      if (Array.isArray(groups) && groups.length) {
+        box.classList.remove("images");
+        const controls = document.createElement("div");
+        controls.className = "images-controls";
+        const label = document.createElement("label");
+        label.textContent = "目录：";
+        label.style.marginRight = "6px";
+        const select = document.createElement("select");
+        select.className = "dir-select";
+        const byName = new Map(groups.map(g => [g.dir, g.files || []]));
+        let active = groups[0].dir;
+        groups.forEach(g => {
+          const opt = document.createElement("option");
+          opt.value = g.dir;
+          opt.textContent = g.dir === "root" ? "根目录" : g.dir;
+          select.appendChild(opt);
+        });
+        select.value = active;
+        const grid = document.createElement("div");
+        grid.className = "images";
+        const renderGrid = name => {
+          grid.innerHTML = "";
+          const files = byName.get(name) || [];
+          files.forEach(f => {
+            const div = document.createElement("div");
+            div.className = "thumb";
+            const img = document.createElement("img");
+            img.loading = "lazy";
+            img.src = encodeURI("/storage/" + f);
+            img.alt = f;
+            const cap = document.createElement("div");
+            cap.textContent = f;
+            div.appendChild(img);
+            div.appendChild(cap);
+            grid.appendChild(div);
+          });
+        };
+        select.addEventListener("change", () => {
+          active = select.value;
+          renderGrid(active);
+        });
+        controls.appendChild(label);
+        controls.appendChild(select);
+        box.appendChild(controls);
+        box.appendChild(grid);
+        renderGrid(active);
+      } else {
+        // 兼容旧结构：扁平 files 列表
+        (data.files || []).forEach(f => {
+          const div = document.createElement("div");
+          div.className = "thumb";
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.src = encodeURI("/storage/" + f);
+          img.alt = f;
+          const cap = document.createElement("div");
+          cap.textContent = f;
+          div.appendChild(img);
+          div.appendChild(cap);
+          box.appendChild(div);
+        });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -89,5 +140,40 @@
         applyTheme(current === "dark" ? "light" : "dark");
       });
     }
+
+    // 缩略图点击预览
+    const modal = document.getElementById("preview-modal");
+    const modalImg = document.getElementById("preview-img");
+    const closeBtn = modal ? modal.querySelector(".close") : null;
+    const openPreview = src => {
+      if (!modal || !modalImg) return;
+      modalImg.src = src;
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
+    };
+    const closePreview = () => {
+      if (!modal || !modalImg) return;
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+      modalImg.src = "";
+    };
+    const imagesBox = document.getElementById("images");
+    if (imagesBox) {
+      imagesBox.addEventListener("click", ev => {
+        const thumb = ev.target.closest(".thumb");
+        if (!thumb) return;
+        const img = thumb.querySelector("img");
+        if (img && img.src) openPreview(img.src);
+      });
+    }
+    if (closeBtn) closeBtn.addEventListener("click", closePreview);
+    if (modal) {
+      modal.addEventListener("click", ev => {
+        if (ev.target === modal) closePreview();
+      });
+    }
+    document.addEventListener("keydown", ev => {
+      if (ev.key === "Escape") closePreview();
+    });
   });
 })();
