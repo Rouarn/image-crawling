@@ -10,6 +10,7 @@
         const div = document.createElement("div");
         div.className = "thumb";
         const img = document.createElement("img");
+        img.loading = "lazy";
         img.src = "/images/" + encodeURIComponent(f);
         img.alt = f;
         const cap = document.createElement("div");
@@ -73,5 +74,20 @@
   document.addEventListener("DOMContentLoaded", () => {
     setupForm();
     loadImages();
+    // 主题初始化与切换
+    const btn = document.getElementById("theme-toggle");
+    const applyTheme = theme => {
+      document.body.classList.toggle("dark", theme === "dark");
+      localStorage.setItem("theme", theme);
+      if (btn) btn.textContent = theme === "dark" ? "☀️" : "🌙";
+    };
+    const saved = localStorage.getItem("theme") || "light";
+    applyTheme(saved);
+    if (btn) {
+      btn.addEventListener("click", () => {
+        const current = document.body.classList.contains("dark") ? "dark" : "light";
+        applyTheme(current === "dark" ? "light" : "dark");
+      });
+    }
   });
 })();
