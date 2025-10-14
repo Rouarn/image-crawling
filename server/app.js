@@ -5,6 +5,7 @@ import { URL } from "node:url";
 import { load } from "cheerio";
 import { pipeline } from "node:stream";
 import { promisify } from "node:util";
+import express from "express";
 
 const streamPipeline = promisify(pipeline);
 // 统一存储父级目录
@@ -62,7 +63,14 @@ function filenameFromUrl(u) {
  * @throws {Error} 当响应不正常或写入失败
  */
 async function downloadImage(u, outDir, usedNames) {
-  const res = await fetch(u);
+  const controller = new AbortController();
+  const timeoutMs = 15000;
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+  const res = await fetch(u, {
+    headers: defaultHeaders(),
+    signal: controller.signal,
+  });
+  clearTimeout(t);
   if (!res.ok || !res.body)
     throw new Error(`HTTP ${res.status} ${res.statusText}`);
   let name = filenameFromUrl(u);
@@ -91,14 +99,13 @@ async function downloadImage(u, outDir, usedNames) {
 // 确保 storage 根目录存在
 ensureDir(STORAGE_ROOT);
 const app = express();
-app.use(express.json());
+// 限制 JSON 请求体大小，避免异常大请求
+app.use(express.json({ limit: "200kb" }));
 // 为视图目录提供静态资源服务（CSS/JS）
-app.use(express.static(path.resolve("views")));
+app.use(express.static(path.resolve("views"), { maxAge: "1h", etag: true }));
 // 静态资源：图片目录与视图页面
-// 将 /images 静态路由指向 storage/images
-app.use("/images", express.static(path.join(STORAGE_ROOT, "images")));
 // 提供整个 storage 目录的静态访问，便于前端访问各子目录
-app.use("/storage", express.static(STORAGE_ROOT));
+app.use("/storage", express.static(STORAGE_ROOT, { maxAge: "1d", etag: true }));
 app.get("/", (req, res) => {
   const filePath = path.join(process.cwd(), "views", "index.html");
   res.sendFile(filePath);
@@ -109,16 +116,43 @@ app.post("/api/crawl", async (req, res) => {
   try {
     const { url, options = {} } = req.body || {};
     if (!url) return res.status(400).json({ error: "url is required" });
-    const opts = Object.assign(
+    // 校验 URL，只允许 http/https
+    let target;
+    try {
+      target = new URL(url);
+    } catch {
+      return res.status(400).json({ error: "invalid url" });
+    }
+    if (!/^https?:$/.test(target.protocol)) {
+      return res.status(400).json({ error: "url protocol must be http/https" });
+    }
+    // 合并并约束参数范围
+    const raw = Object.assign(
       {
         outDir: "images",
         concurrency: 5,
         maxPages: 10,
         pageDelayMs: 500,
+        fetchTimeoutMs: 15000,
       },
       options
     );
-    const result = await crawlImagesWithPagination(url, opts);
+    const opts = {
+      outDir: path.isAbsolute(raw.outDir)
+        ? path.basename(raw.outDir)
+        : String(raw.outDir || "images"),
+      concurrency: Math.max(1, Math.min(10, Number(raw.concurrency || 5))),
+      maxPages: Math.max(1, Math.min(50, Number(raw.maxPages || 10))),
+      pageDelayMs: Math.max(0, Math.min(2000, Number(raw.pageDelayMs || 500))),
+      fetchTimeoutMs: Math.max(
+        1000,
+        Math.min(60000, Number(raw.fetchTimeoutMs || 15000))
+      ),
+      pagePattern: raw.pagePattern,
+      startPage: raw.startPage,
+      endPage: raw.endPage,
+    };
+    const result = await crawlImagesWithPagination(target.href, opts);
     res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message || String(e) });
@@ -130,7 +164,15 @@ app.get("/api/images", (req, res) => {
   try {
     const root = STORAGE_ROOT;
     ensureDir(root);
-    const exts = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg"]);
+    const exts = new Set([
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp",
+      ".bmp",
+      ".svg",
+    ]);
     const groups = new Map();
     const pushFile = (relPath, relBase) => {
       const top = relBase ? relBase.split("/")[0] : "root";
@@ -152,7 +194,14 @@ app.get("/api/images", (req, res) => {
       }
     };
     walk(root);
-    const result = Array.from(groups.entries()).map(([dir, files]) => ({ dir, files }));
+    const result = Array.from(groups.entries()).map(([dir, files]) => ({
+      dir,
+      files: (files || []).sort((a, b) => a.localeCompare(b)),
+    }));
+    // 目录排序：root 优先，其余字典序
+    result.sort((a, b) =>
+      a.dir === "root" ? -1 : b.dir === "root" ? 1 : a.dir.localeCompare(b.dir)
+    );
     const total = result.reduce((acc, g) => acc + g.files.length, 0);
     res.json({ groups: result, total });
   } catch (e) {
@@ -160,6 +209,14 @@ app.get("/api/images", (req, res) => {
   }
 });
 
+// 404 与错误处理（应在所有路由之后）
+app.use((req, res) => {
+  res.status(404).json({ error: "Not Found" });
+});
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: err?.message || "Internal Server Error" });
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening: http://localhost:${PORT}`);
@@ -211,7 +268,16 @@ async function resolvePages(baseUrl, opts = {}) {
   for (let i = 0; i < (opts.maxPages || 10); i++) {
     pages.push(current);
     try {
-      const res = await fetch(current, { headers: defaultHeaders() });
+      const controller = new AbortController();
+      const t = setTimeout(
+        () => controller.abort(),
+        Number(opts.fetchTimeoutMs || 15000)
+      );
+      const res = await fetch(current, {
+        headers: defaultHeaders(),
+        signal: controller.signal,
+      });
+      clearTimeout(t);
       if (!res.ok) break;
       const html = await res.text();
       const $ = load(html);
@@ -306,7 +372,10 @@ async function crawlImagesWithPagination(baseUrl, opts) {
   for (let i = 0; i < pages.length; i++) {
     const pageUrl = pages[i];
     console.log(`Fetching page ${i + 1}/${pages.length}: ${pageUrl}`);
-    const pageRes = await fetch(pageUrl, { headers: defaultHeaders() });
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), Number(opts.fetchTimeoutMs || 15000));
+    const pageRes = await fetch(pageUrl, { headers: defaultHeaders(), signal: controller.signal });
+    clearTimeout(t);
     if (!pageRes.ok) {
       console.error(
         `Fetch page failed: ${pageRes.status} ${pageRes.statusText}`
@@ -328,4 +397,4 @@ async function crawlImagesWithPagination(baseUrl, opts) {
     outDir: path.relative(process.cwd(), outDir),
   };
 }
-import express from "express";
+// 已在顶部导入 express，移除重复导入

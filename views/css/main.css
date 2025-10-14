@@ -281,3 +281,31 @@ body.dark .images-controls .dir-select {
   color: var(--text);
   border-color: #2e333a;
 }
+
+/* 横向标签按钮（tabs）用于目录切换 */
+.images-controls .tab {
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.images-controls .tab:hover { filter: brightness(0.97); }
+.images-controls .tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+body.dark .images-controls .tab {
+  background: #12161a;
+  color: #cbd5e1;
+  border-color: #2e333a;
+}
+body.dark .images-controls .tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}

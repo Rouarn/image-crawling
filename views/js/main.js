@@ -7,25 +7,13 @@
       const box = document.getElementById("images");
       box.innerHTML = "";
       const groups = data.groups;
-      // 多目录展示方案：使用下拉选择器切换目录，避免纵向堆叠导致页面超高
+      // 多目录展示方案：使用横向标签（tabs）切换目录，避免页面超高
       if (Array.isArray(groups) && groups.length) {
         box.classList.remove("images");
         const controls = document.createElement("div");
         controls.className = "images-controls";
-        const label = document.createElement("label");
-        label.textContent = "目录：";
-        label.style.marginRight = "6px";
-        const select = document.createElement("select");
-        select.className = "dir-select";
         const byName = new Map(groups.map(g => [g.dir, g.files || []]));
         let active = groups[0].dir;
-        groups.forEach(g => {
-          const opt = document.createElement("option");
-          opt.value = g.dir;
-          opt.textContent = g.dir === "root" ? "根目录" : g.dir;
-          select.appendChild(opt);
-        });
-        select.value = active;
         const grid = document.createElement("div");
         grid.className = "images";
         const renderGrid = name => {
@@ -45,12 +33,19 @@
             grid.appendChild(div);
           });
         };
-        select.addEventListener("change", () => {
-          active = select.value;
-          renderGrid(active);
+        groups.forEach(g => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "tab" + (g.dir === active ? " active" : "");
+          btn.textContent = g.dir === "root" ? "根目录" : g.dir;
+          btn.addEventListener("click", () => {
+            active = g.dir;
+            Array.from(controls.querySelectorAll(".tab")).forEach(el => el.classList.remove("active"));
+            btn.classList.add("active");
+            renderGrid(active);
+          });
+          controls.appendChild(btn);
         });
-        controls.appendChild(label);
-        controls.appendChild(select);
         box.appendChild(controls);
         box.appendChild(grid);
         renderGrid(active);
@@ -78,6 +73,58 @@
   function setupForm() {
     const form = document.getElementById("crawl-form");
     if (!form) return;
+    // 根据 URL 自动填充输出目录：取路径最后一段，去掉后缀并规范化
+    const urlInput = form.querySelector('input[name="url"]');
+    const outDirInput = form.querySelector('input[name="outDir"]');
+    const deriveOutDir = raw => {
+      if (!raw) return "";
+      let pathname = "";
+      try {
+        pathname = new URL(raw).pathname || "";
+      } catch {
+        const stripped = String(raw).split("?")[0].split("#")[0];
+        const idx = stripped.lastIndexOf("/");
+        pathname = idx >= 0 ? stripped.slice(idx) : stripped;
+      }
+      pathname = pathname.replace(/\/+$/, ""); // 去掉末尾斜杠
+      let segment = (pathname.split("/").filter(Boolean).pop() || "");
+      segment = segment.replace(/\.[^./?#]+$/, ""); // 移除文件后缀
+      if (!segment) {
+        try {
+          // 退化使用域名（去 www. 前缀）
+          segment = new URL(raw).hostname.replace(/^www\./, "");
+        } catch {}
+      }
+      segment = segment.trim().replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase();
+      return segment || "";
+    };
+    if (urlInput && outDirInput) {
+      urlInput.addEventListener("input", () => {
+        const v = urlInput.value.trim();
+        const derived = deriveOutDir(v);
+        if (!derived) return;
+        const prev = outDirInput.value.trim();
+        // 若为空或之前为自动填充，则更新；避免覆盖用户手动修改
+        if (!prev || outDirInput.dataset.autofill === "1") {
+          outDirInput.value = derived;
+          outDirInput.dataset.autofill = "1";
+        }
+      });
+      urlInput.addEventListener("blur", () => {
+        const v = urlInput.value.trim();
+        if (!outDirInput.value.trim()) {
+          const derived = deriveOutDir(v);
+          if (derived) {
+            outDirInput.value = derived;
+            outDirInput.dataset.autofill = "1";
+          }
+        }
+      });
+      // 用户手动修改输出目录时，取消自动填充标记
+      outDirInput.addEventListener("input", () => {
+        outDirInput.dataset.autofill = "";
+      });
+    }
     form.addEventListener("submit", async ev => {
       ev.preventDefault();
       const status = document.getElementById("status");
