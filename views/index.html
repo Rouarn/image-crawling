@@ -16,85 +16,119 @@
         </button>
       </div>
     </header>
-    <main>
-      <!-- 快速开始：简要说明与引导 -->
-      <section class="section">
-        <div class="card hero">
-          <h2>快速开始</h2>
-          <p class="muted">
-            填写目标页面，支持自动“下一页”和分页模式占位符
-            {page}，并发与延迟可调。
-          </p>
-        </div>
-      </section>
-      <!-- 抓取配置：提交到 /api/crawl，main.js 负责监听与提交 -->
-      <section class="section">
-        <div class="card">
-          <h2>抓取配置</h2>
-          <p class="muted">支持分页模式与自动“下一页”，可配置并发与延迟。</p>
-          <form id="crawl-form">
-            <!-- 网格布局：表单字段两列排列，窄屏自适应为单列 -->
-            <div class="grid">
-              <label>
-                目标页面 URL
-                <input name="url" placeholder="https://example.com" required />
-                <small>示例：https://example.com/gallery</small>
-              </label>
-              <label>
-                输出目录
-                <input name="outDir" placeholder="images" />
-                <small>默认保存到 storage/images 目录</small>
-              </label>
-              <label>
-                最大页数
-                <input name="maxPages" type="number" min="1" value="5" />
-                <small>自动“下一页”最多抓取的页数</small>
-              </label>
-              <label>
-                并发下载数
-                <input name="concurrency" type="number" min="1" value="6" />
-                <small>同时下载的任务数</small>
-              </label>
-              <label>
-                页面延迟 (ms)
-                <input name="pageDelayMs" type="number" min="0" value="500" />
-                <small>每页抓取之间的等待时间</small>
-              </label>
-              <label>
-                分页模式 (可选)
-                <input
-                  name="pagePattern"
-                  placeholder="https://site.com/list?page={page}"
-                />
-                <small>在 URL 中使用 {page} 作为页码占位符</small>
-              </label>
-              <label>
-                起始页 (可选)
-                <input name="startPage" type="number" min="1" />
-                <small>与分页模式配合使用</small>
-              </label>
-              <label>
-                结束页 (可选)
-                <input name="endPage" type="number" min="1" />
-                <small>与分页模式配合使用</small>
-              </label>
+    <main class="layout">
+      <aside class="sidebar">
+        <!-- 快速开始：简要说明与引导 -->
+        <section class="section">
+          <div class="card hero">
+            <h2>快速开始</h2>
+            <p class="muted">
+              填写目标页面，支持自动“下一页”和分页模式占位符
+              {page}，并发与延迟可调。
+            </p>
+          </div>
+        </section>
+        <!-- 抓取配置：提交到 /api/crawl，main.js 负责监听与提交 -->
+        <section class="section">
+          <div class="card">
+            <h2>抓取配置</h2>
+            <p class="muted">支持分页模式与自动“下一页”，可配置并发与延迟。</p>
+            <form id="crawl-form">
+              <!-- 网格布局：表单字段两列排列，窄屏自适应为单列 -->
+              <div class="grid">
+                <label>
+                  目标页面 URL
+                  <input
+                    name="url"
+                    placeholder="https://example.com"
+                    required
+                  />
+                  <small>示例：https://example.com/gallery</small>
+                </label>
+                <label>
+                  输出目录
+                  <input name="outDir" placeholder="images" />
+                  <small>默认保存到 storage/images 目录</small>
+                </label>
+                <label>
+                  最大页数
+                  <input name="maxPages" type="number" min="1" value="5" />
+                  <small>自动“下一页”最多抓取的页数</small>
+                </label>
+                <label>
+                  并发下载数
+                  <input name="concurrency" type="number" min="1" value="6" />
+                  <small>同时下载的任务数</small>
+                </label>
+                <label>
+                  页面延迟 (ms)
+                  <input name="pageDelayMs" type="number" min="0" value="500" />
+                  <small>每页抓取之间的等待时间</small>
+                </label>
+                <label>
+                  分页模式 (可选)
+                  <input
+                    name="pagePattern"
+                    placeholder="https://site.com/list?page={page}"
+                  />
+                  <small>在 URL 中使用 {page} 作为页码占位符</small>
+                </label>
+                <label>
+                  起始页 (可选)
+                  <input name="startPage" type="number" min="1" />
+                  <small>与分页模式配合使用</small>
+                </label>
+                <label>
+                  结束页 (可选)
+                  <input name="endPage" type="number" min="1" />
+                  <small>与分页模式配合使用</small>
+                </label>
+              </div>
+              <div class="form-actions">
+                <button type="submit">开始抓取</button>
+                <span id="status" class="status"></span>
+              </div>
+            </form>
+          </div>
+
+          <section class="section">
+            <div class="card">
+              <h2>使用说明</h2>
+              <ul class="guides">
+                <li>直接填写目标页面 URL 可自动识别常见“下一页”。</li>
+                <li>
+                  若站点不规范或跨域分页，请使用“分页模式”示例：
+                  https://site.com/list?page={page}。
+                </li>
+                <li>起始页与结束页仅在填写“分页模式”时生效。</li>
+              </ul>
             </div>
-            <button type="submit">开始抓取</button>
-            <span id="status" class="status"></span>
-          </form>
-        </div>
-      </section>
-      <!-- 已下载图片展示 -->
-      <section class="section">
-        <div class="card">
-          <h2>已下载图片</h2>
-          <!--
-            图片容器：由 main.js 的 loadImages() 填充。
-            · 当存在多目录时，会注入目录切换控件（images-controls）与网格（.images）。
-            · 否则按旧结构 files 扁平列表直接渲染缩略图。
-          -->
-          <div id="images" class="images"></div>
-        </div>
+          </section>
+        </section>
+      </aside>
+      <section class="content">
+        <!-- 已下载图片展示与工具栏 -->
+        <section class="section">
+          <div class="card">
+            <div class="card-header">
+              <h2>已下载图片</h2>
+              <div class="images-toolbar">
+                <input
+                  id="images-filter"
+                  class="search"
+                  type="search"
+                  placeholder="按文件名筛选..."
+                />
+              </div>
+            </div>
+            <!--
+              图片容器：由 main.js 的 loadImages() 填充。
+              · 当存在多目录时，会注入目录切换控件（images-controls）与网格（.images）。
+              · 否则按旧结构 files 扁平列表直接渲染缩略图。
+            -->
+            <div id="images" class="images"></div>
+          </div>
+        </section>
       </section>
 
       <!-- 预览模态层 -->
@@ -110,20 +144,6 @@
           <img id="preview-img" alt="预览图" />
         </div>
       </div>
-
-      <section class="section">
-        <div class="card">
-          <h2>使用说明</h2>
-          <ul class="guides">
-            <li>直接填写目标页面 URL 可自动识别常见“下一页”。</li>
-            <li>
-              若站点不规范或跨域分页，请使用“分页模式”示例：
-              https://site.com/list?page={page}。
-            </li>
-            <li>起始页与结束页仅在填写“分页模式”时生效。</li>
-          </ul>
-        </div>
-      </section>
     </main>
     <footer class="site-footer">
       <div class="container">

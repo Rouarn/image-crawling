@@ -12,6 +12,39 @@
   - 用户点击缩略图 → 打开预览 → 点击遮罩/关闭或按 ESC → 关闭预览。
 */
 (function () {
+  /** 渲染骨架屏占位 */
+  function renderSkeleton(box, count = 8) {
+    if (!box) return;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < count; i++) {
+      const div = document.createElement("div");
+      div.className = "thumb";
+      const sk = document.createElement("div");
+      sk.className = "skeleton skeleton-thumb";
+      div.appendChild(sk);
+      const cap = document.createElement("div");
+      cap.className = "skeleton";
+      cap.style.height = "12px";
+      cap.style.borderRadius = "6px";
+      cap.style.marginTop = "8px";
+      div.appendChild(cap);
+      frag.appendChild(div);
+    }
+    box.innerHTML = "";
+    box.appendChild(frag);
+  }
+
+  /** 根据输入框内容筛选当前缩略图 */
+  function applyFilter() {
+    const input = document.getElementById("images-filter");
+    const q = (input && input.value ? input.value : "").trim().toLowerCase();
+    const thumbs = document.querySelectorAll("#images .thumb");
+    thumbs.forEach(t => {
+      const name = (t.dataset.name || "").toLowerCase();
+      t.style.display = q ? (name.includes(q) ? "" : "none") : "";
+    });
+  }
+
   /**
    * 加载已下载图片并渲染到页面
    * 来源：GET /api/images
@@ -20,10 +53,11 @@
    * - 否则兼容旧结构的 files 扁平数组，直接渲染所有缩略图。
    */
   async function loadImages() {
+    const box = document.getElementById("images");
+    if (box) renderSkeleton(box, 10);
     try {
       const res = await fetch("/api/images");
       const data = await res.json();
-      const box = document.getElementById("images");
       box.innerHTML = "";
       const groups = data.groups;
       // 多目录展示方案：使用横向标签（tabs）切换目录，避免页面超高
@@ -41,16 +75,19 @@
           files.forEach(f => {
             const div = document.createElement("div");
             div.className = "thumb";
+            div.dataset.name = f;
             const img = document.createElement("img");
             img.loading = "lazy";
             img.src = encodeURI("/storage/" + f);
             img.alt = f;
+            img.title = f;
             const cap = document.createElement("div");
             cap.textContent = f;
             div.appendChild(img);
             div.appendChild(cap);
             grid.appendChild(div);
           });
+          applyFilter();
         };
         groups.forEach(g => {
           const btn = document.createElement("button");
@@ -73,16 +110,19 @@
         (data.files || []).forEach(f => {
           const div = document.createElement("div");
           div.className = "thumb";
+          div.dataset.name = f;
           const img = document.createElement("img");
           img.loading = "lazy";
           img.src = encodeURI("/storage/" + f);
           img.alt = f;
+          img.title = f;
           const cap = document.createElement("div");
           cap.textContent = f;
           div.appendChild(img);
           div.appendChild(cap);
           box.appendChild(div);
         });
+        applyFilter();
       }
     } catch (e) {
       console.error(e);
@@ -202,6 +242,9 @@
   document.addEventListener("DOMContentLoaded", () => {
     setupForm();
     loadImages();
+    // 筛选交互
+    const input = document.getElementById("images-filter");
+    if (input) input.addEventListener("input", applyFilter);
     // 主题初始化与切换
     const btn = document.getElementById("theme-toggle");
     /** 切换主题并持久化到 localStorage */
