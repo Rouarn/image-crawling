@@ -46,6 +46,9 @@ main {
 .section {
   margin-top: 24px;
 }
+.section:first-child {
+  margin-top: 0;
+}
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border);
@@ -134,6 +137,12 @@ form#crawl-form {
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
+
+/* :nth-child */
+.grid :nth-child(1) {
+  margin-top: 20px;
+}
+
 @media (max-width: 780px) {
   .grid {
     grid-template-columns: 1fr;
@@ -161,9 +170,26 @@ input,
   outline: none;
   background: #fff;
 }
+textarea {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid #cfd6df;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  resize: vertical;
+  min-height: 90px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
 input:focus,
 .images-toolbar .search:focus,
 .images-controls .dir-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.15);
+}
+textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.15);
 }
@@ -429,6 +455,11 @@ body.dark .images-controls .dir-select {
   color: var(--text);
   border-color: #2e333a;
 }
+body.dark textarea {
+  background: #101317;
+  color: var(--text);
+  border-color: #2e333a;
+}
 body.dark .thumb {
   background: #1a1f24;
   border-color: #2e333a;
@@ -466,10 +497,10 @@ body.dark .progress-log {
   padding: 6px 8px;
   border-left: 3px solid #cfd6df;
   border-radius: 6px;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
 }
 body.dark .progress-log .log-item {
-  background: rgba(16,19,23,0.6);
+  background: rgba(16, 19, 23, 0.6);
 }
 .progress-log .icon {
   font-size: 14px;
@@ -484,10 +515,61 @@ body.dark .progress-log .log-item {
   font-size: 11px;
 }
 /* 类型颜色 */
-.progress-log .log-plan { border-left-color: #2b7cff; }
-.progress-log .log-page { border-left-color: #64748b; }
-.progress-log .log-fallback { border-left-color: #f59e0b; }
-.progress-log .log-page_done { border-left-color: #22c55e; }
-.progress-log .log-discover { border-left-color: #845ef7; }
-.progress-log .log-complete { border-left-color: #16a34a; }
-.progress-log .log-error { border-left-color: #ef4444; }
+.progress-log .log-plan {
+  border-left-color: #2b7cff;
+}
+.progress-log .log-page {
+  border-left-color: #64748b;
+}
+.progress-log .log-fallback {
+  border-left-color: #f59e0b;
+}
+.progress-log .log-page_done {
+  border-left-color: #22c55e;
+}
+.progress-log .log-discover {
+  border-left-color: #845ef7;
+}
+.progress-log .log-complete {
+  border-left-color: #16a34a;
+}
+.progress-log .log-error {
+  border-left-color: #ef4444;
+}
+
+/* ========================= 高级字段：自定义请求头 ========================= */
+.headers-field {
+  position: relative;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(132, 94, 247, 0.06),
+    rgba(132, 94, 247, 0.02)
+  );
+}
+.headers-field textarea {
+  background: #fbfdff;
+}
+.headers-field::before {
+  content: "高级配置";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  font-size: 11px;
+  color: #845ef7;
+  background: var(--card-bg);
+  padding: 0 6px;
+  border-radius: 6px;
+}
+body.dark .headers-field {
+  background: linear-gradient(
+    180deg,
+    rgba(132, 94, 247, 0.08),
+    rgba(132, 94, 247, 0.03)
+  );
+}
+body.dark .headers-field textarea {
+  background: #0d1116;
+}

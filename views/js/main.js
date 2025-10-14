@@ -276,6 +276,20 @@
       progressLog.show();
       const formData = new FormData(form);
       const url = formData.get("url");
+      // 读取并校验自定义请求头（JSON 可选）
+      let headersObj;
+      const headersText = form.querySelector('textarea[name="headers"]')?.value?.trim();
+      if (headersText) {
+        try {
+          const parsed = JSON.parse(headersText);
+          if (parsed && typeof parsed === "object") headersObj = parsed;
+        } catch (e) {
+          status.textContent = "错误：请求头 JSON 无效";
+          status.className = "status error";
+          btn.disabled = false;
+          return;
+        }
+      }
       const options = {
         outDir: formData.get("outDir") || undefined,
         maxPages: Number(formData.get("maxPages")) || undefined,
@@ -289,13 +303,19 @@
           ? Number(formData.get("endPage"))
           : undefined,
         useHeadless: form.querySelector('input[name="useHeadless"]')?.checked || undefined,
+        headers: headersObj,
       };
       try {
         // 使用 SSE 实时显示进度
         const qs = new URLSearchParams();
         qs.set("url", String(url || ""));
         Object.entries(options).forEach(([k,v]) => {
-          if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+          if (v === undefined || v === null || v === "") return;
+          if (k === "headers") {
+            try { qs.set("headers", JSON.stringify(v)); } catch {}
+          } else {
+            qs.set(k, String(v));
+          }
         });
         const es = new EventSource(`/api/crawl/stream?${qs.toString()}`);
         es.onmessage = async (ev) => {

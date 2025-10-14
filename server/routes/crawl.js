@@ -8,6 +8,22 @@ import { crawlImagesWithPagination } from "../lib/crawl.js";
  */
 const router = Router();
 
+function normalizeHeaders(input) {
+  if (!input) return undefined;
+  try {
+    const obj = typeof input === "string" ? JSON.parse(input) : input;
+    if (!obj || typeof obj !== "object") return undefined;
+    const out = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (v == null) continue;
+      out[String(k).toLowerCase()] = String(v);
+    }
+    return out;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * POST /api/crawl
  * 请求体：{ url: string, options?: { outDir, concurrency, maxPages, pageDelayMs, fetchTimeoutMs, pagePattern, startPage, endPage } }
@@ -58,6 +74,7 @@ router.post("/api/crawl", async (req, res) => {
       startPage: raw.startPage,
       endPage: raw.endPage,
       useHeadless: Boolean(raw.useHeadless),
+      headers: normalizeHeaders(raw.headers),
     };
 
     const result = await crawlImagesWithPagination(target.href, opts);
@@ -97,6 +114,7 @@ router.get("/api/crawl/stream", async (req, res) => {
       startPage: req.query.startPage,
       endPage: req.query.endPage,
       useHeadless: req.query.useHeadless,
+      headers: req.query.headers,
     };
     const opts = {
       outDir: path.isAbsolute(raw.outDir)
@@ -113,6 +131,7 @@ router.get("/api/crawl/stream", async (req, res) => {
       startPage: raw.startPage,
       endPage: raw.endPage,
       useHeadless: /^(1|true|yes)$/i.test(String(raw.useHeadless || "")),
+      headers: normalizeHeaders(raw.headers),
     };
 
     res.setHeader("Content-Type", "text/event-stream");

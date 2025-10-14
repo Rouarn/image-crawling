@@ -27,6 +27,22 @@ function defaultHeaders() {
 }
 
 /**
+ * 合并默认头与用户自定义头（用户优先）。
+ * @param {object} base 默认头
+ * @param {object|undefined} extra 用户提供头
+ */
+function mergeHeaders(base, extra) {
+  const merged = { ...(base || {}) };
+  if (extra && typeof extra === "object") {
+    for (const [k, v] of Object.entries(extra)) {
+      if (v == null) continue;
+      merged[String(k).toLowerCase()] = String(v);
+    }
+  }
+  return merged;
+}
+
+/**
  * 延时 Promise。
  * @param {number} ms 毫秒
  */
@@ -77,7 +93,7 @@ async function downloadImage(u, outDir, usedNames) {
   const timeoutMs = 15000;
   const t = setTimeout(() => controller.abort(), timeoutMs);
   const res = await fetch(u, {
-    headers: defaultHeaders(),
+    headers: mergeHeaders(defaultHeaders(), opts.headers),
     signal: controller.signal,
   });
   clearTimeout(t);
@@ -181,7 +197,7 @@ async function resolvePages(baseUrl, opts = {}) {
         Number(opts.fetchTimeoutMs || 15000)
       );
       const res = await fetch(current, {
-        headers: { ...defaultHeaders(), referer: current },
+        headers: mergeHeaders({ ...defaultHeaders(), referer: current }, opts.headers),
         signal: controller.signal,
       });
       clearTimeout(t);
@@ -257,7 +273,7 @@ export async function crawlImagesWithPagination(baseUrl, opts) {
     const t = setTimeout(() => controller.abort(), Number(opts.fetchTimeoutMs || 15000));
     let pageRes;
     try {
-      pageRes = await fetch(pageUrl, { headers: { ...defaultHeaders(), referer: pageUrl }, signal: controller.signal });
+      pageRes = await fetch(pageUrl, { headers: mergeHeaders({ ...defaultHeaders(), referer: pageUrl }, opts.headers), signal: controller.signal });
     } catch (e) {
       clearTimeout(t);
       console.error("抓取页面异常：", e.message || e);
@@ -356,8 +372,18 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
   }
   try {
     const page = await browser.newPage();
-    await page.setUserAgent(defaultHeaders()["user-agent"]);
-    await page.setExtraHTTPHeaders({ referer: pageUrl, accept: defaultHeaders().accept, "accept-language": defaultHeaders()["accept-language"] });
+    const ua = (opts.headers && (opts.headers["user-agent"] || opts.headers["User-Agent"])) || defaultHeaders()["user-agent"];
+    await page.setUserAgent(ua);
+    const baseExtra = { referer: pageUrl, accept: defaultHeaders().accept, "accept-language": defaultHeaders()["accept-language"] };
+    const extra = mergeHeaders(baseExtra, opts.headers);
+    // puppeteer 的 setExtraHTTPHeaders 需要原始大小写键名，简单映射即可
+    await page.setExtraHTTPHeaders({
+      referer: extra["referer"],
+      accept: extra["accept"],
+      "accept-language": extra["accept-language"],
+      ...(extra["cookie"] ? { cookie: extra["cookie"] } : {}),
+      ...(extra["authorization"] ? { authorization: extra["authorization"] } : {}),
+    });
     try {
       await page.setViewport({ width: 1366, height: 768, deviceScaleFactor: 1 });
       await page.evaluateOnNewDocument(() => {

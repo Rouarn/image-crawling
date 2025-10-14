@@ -88,6 +88,13 @@
                   <small>与分页模式配合使用</small>
                 </label>
               </div>
+              <div class="grid">
+                <label class="headers-field" style="grid-column: 1 / -1">
+                  自定义请求头 (JSON 可选)
+                  <textarea name="headers" rows="4" placeholder='例如：{"user-agent":"Mozilla/5.0 ...","cookie":"a=b; c=d"}'></textarea>
+                  <small>留空则使用默认。建议按需设置如 user-agent、cookie、authorization 等。</small>
+                </label>
+              </div>
               <div class="form-actions">
                 <button type="submit">开始抓取</button>
                 <span id="status" class="status"></span>
