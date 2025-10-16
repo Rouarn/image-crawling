@@ -19,29 +19,30 @@ const streamPipeline = promisify(pipeline);
  * @param {string} type 请求类型，'image' 或 'html'
  * @param {string} referer 来源URL
  */
-function defaultHeaders(type = 'html', referer = '') {
+function defaultHeaders(type = "html", referer = "") {
   const common = {
     "user-agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36 image-crawler",
     "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
   };
-  
+
   // 根据请求类型返回不同的请求头
-  if (type === 'image') {
+  if (type === "image") {
     return {
       ...common,
-      "accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      accept:
+        "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
       "sec-fetch-dest": "image",
       "sec-fetch-mode": "no-cors",
       "sec-fetch-site": "same-origin",
-      "referer": referer || '',
+      referer: referer || "",
     };
   }
-  
+
   // 默认为HTML请求头
   return {
     ...common,
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   };
 }
 
@@ -112,14 +113,14 @@ async function downloadImage(u, outDir, usedNames, options) {
   const controller = new AbortController();
   const timeoutMs = options?.fetchTimeoutMs || 15000;
   const t = setTimeout(() => controller.abort(), timeoutMs);
-  
+
   // 使用更新后的defaultHeaders函数，指定类型为image并传入referer
   const referer = new URL(u).origin;
-  const headers = defaultHeaders('image', referer);
-  
+  const headers = defaultHeaders("image", referer);
+
   // 合并用户自定义头
   const finalHeaders = mergeHeaders(headers, options?.headers);
-  
+
   const res = await fetch(u, {
     headers: finalHeaders,
     signal: controller.signal,
@@ -225,10 +226,7 @@ async function resolvePages(baseUrl, opts = {}) {
         Number(opts.fetchTimeoutMs || 15000)
       );
       const res = await fetch(current, {
-        headers: mergeHeaders(
-          { ...defaultHeaders(), referer: current },
-          opts.headers
-        ),
+        headers: mergeHeaders(defaultHeaders("html", current), opts.headers),
         signal: controller.signal,
       });
       clearTimeout(t);
@@ -317,10 +315,7 @@ export async function crawlImagesWithPagination(baseUrl, opts) {
     let pageRes;
     try {
       pageRes = await fetch(pageUrl, {
-        headers: mergeHeaders(
-          { ...defaultHeaders(), referer: pageUrl },
-          opts.headers
-        ),
+        headers: mergeHeaders(defaultHeaders("html", pageUrl), opts.headers),
         signal: controller.signal,
       });
     } catch (e) {
