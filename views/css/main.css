@@ -326,6 +326,7 @@ body.dark .images-controls .tab.active {
   width: 100%;
   margin: 0 0 14px;
   break-inside: avoid;
+  position: relative;
 }
 .thumb:hover {
   transform: translateY(-2px);
@@ -344,6 +345,34 @@ body.dark .images-controls .tab.active {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 缩略图删除按钮 */
+.thumb .delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: #d32f2f;
+  border-radius: 16px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.thumb .delete-btn:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+body.dark .thumb .delete-btn {
+  background: #12161a;
+  color: #ef4444;
+  border-color: #2e333a;
 }
 
 /* ========================= 模态层预览 ========================= */

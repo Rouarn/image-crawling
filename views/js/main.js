@@ -52,7 +52,9 @@
    * - append 渲染结构化日志项（含图标与时间戳）
    */
   const progressLog = {
-    getBox() { return document.getElementById("progress"); },
+    getBox() {
+      return document.getElementById("progress");
+    },
     show() {
       const box = this.getBox();
       const modal = document.getElementById("progress-modal");
@@ -78,9 +80,9 @@
     },
     nowStr() {
       const d = new Date();
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      const ss = String(d.getSeconds()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
       return `${hh}:${mm}:${ss}`;
     },
     icons: {
@@ -95,7 +97,8 @@
     append(type, msg) {
       const box = this.getBox();
       if (!box) return;
-      const nearBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 8;
+      const nearBottom =
+        box.scrollTop + box.clientHeight >= box.scrollHeight - 8;
       const row = document.createElement("div");
       row.className = `log-item log-${type}`;
       const icon = document.createElement("span");
@@ -118,7 +121,7 @@
       if (nearBottom) {
         box.scrollTop = box.scrollHeight;
       }
-    }
+    },
   };
 
   /**
@@ -159,8 +162,41 @@
             img.title = f;
             const cap = document.createElement("div");
             cap.textContent = f;
+            const del = document.createElement("button");
+            del.type = "button";
+            del.className = "delete-btn";
+            del.title = "删除";
+            del.textContent = "🗑️";
+            del.addEventListener("click", async ev => {
+              ev.stopPropagation();
+              del.disabled = true;
+              try {
+                const resp = await fetch("/api/images", {
+                  method: "DELETE",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ name: f }),
+                });
+                if (resp.ok) {
+                  div.remove();
+                  // 在 res 中移除该文件
+                  byName.get(active).splice(byName.get(active).indexOf(f), 1);
+                } else {
+                  let msg = resp.statusText;
+                  try {
+                    const j = await resp.json();
+                    if (j && j.error) msg = j.error;
+                  } catch {}
+                  alert(`删除失败：${msg}`);
+                }
+              } catch (e) {
+                alert(`删除失败：${e.message || e}`);
+              } finally {
+                del.disabled = false;
+              }
+            });
             div.appendChild(img);
             div.appendChild(cap);
+            div.appendChild(del);
             grid.appendChild(div);
           });
           applyFilter();
@@ -172,7 +208,9 @@
           btn.textContent = g.dir === "root" ? "根目录" : g.dir;
           btn.addEventListener("click", () => {
             active = g.dir;
-            Array.from(controls.querySelectorAll(".tab")).forEach(el => el.classList.remove("active"));
+            Array.from(controls.querySelectorAll(".tab")).forEach(el =>
+              el.classList.remove("active")
+            );
             btn.classList.add("active");
             renderGrid(active);
           });
@@ -194,8 +232,41 @@
           img.title = f;
           const cap = document.createElement("div");
           cap.textContent = f;
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "delete-btn";
+          del.title = "删除";
+          del.textContent = "🗑️";
+          del.addEventListener("click", async ev => {
+            ev.stopPropagation();
+            del.disabled = true;
+            try {
+              const resp = await fetch("/api/images", {
+                method: "DELETE",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ name: f }),
+              });
+              if (resp.ok) {
+                div.remove();
+                // 在 res 中移除该文件
+                data.files.splice(data.files.indexOf(f), 1);
+              } else {
+                let msg = resp.statusText;
+                try {
+                  const j = await resp.json();
+                  if (j && j.error) msg = j.error;
+                } catch {}
+                alert(`删除失败：${msg}`);
+              }
+            } catch (e) {
+              alert(`删除失败：${e.message || e}`);
+            } finally {
+              del.disabled = false;
+            }
+          });
           div.appendChild(img);
           div.appendChild(cap);
+          div.appendChild(del);
           box.appendChild(div);
         });
         applyFilter();
@@ -233,7 +304,7 @@
         pathname = idx >= 0 ? stripped.slice(idx) : stripped;
       }
       pathname = pathname.replace(/\/+$/, ""); // 去掉末尾斜杠
-      let segment = (pathname.split("/").filter(Boolean).pop() || "");
+      let segment = pathname.split("/").filter(Boolean).pop() || "";
       segment = segment.replace(/\.[^./?#]+$/, ""); // 移除文件后缀
       if (!segment) {
         try {
@@ -241,7 +312,11 @@
           segment = new URL(raw).hostname.replace(/^www\./, "");
         } catch {}
       }
-      segment = segment.trim().replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "").toLowerCase();
+      segment = segment
+        .trim()
+        .replace(/[^\w-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase();
       return segment || "";
     };
     if (urlInput && outDirInput) {
@@ -284,7 +359,9 @@
       const url = formData.get("url");
       // 读取并校验自定义请求头（JSON 可选）
       let headersObj;
-      const headersText = form.querySelector('textarea[name="headers"]')?.value?.trim();
+      const headersText = form
+        .querySelector('textarea[name="headers"]')
+        ?.value?.trim();
       if (headersText) {
         try {
           const parsed = JSON.parse(headersText);
@@ -308,47 +385,67 @@
         endPage: formData.get("endPage")
           ? Number(formData.get("endPage"))
           : undefined,
-        useHeadless: form.querySelector('input[name="useHeadless"]')?.checked || undefined,
+        useHeadless:
+          form.querySelector('input[name="useHeadless"]')?.checked || undefined,
         headers: headersObj,
       };
       try {
         // 使用 SSE 实时显示进度
         const qs = new URLSearchParams();
         qs.set("url", String(url || ""));
-        Object.entries(options).forEach(([k,v]) => {
+        Object.entries(options).forEach(([k, v]) => {
           if (v === undefined || v === null || v === "") return;
           if (k === "headers") {
-            try { qs.set("headers", JSON.stringify(v)); } catch {}
+            try {
+              qs.set("headers", JSON.stringify(v));
+            } catch {}
           } else {
             qs.set(k, String(v));
           }
         });
         const es = new EventSource(`/api/crawl/stream?${qs.toString()}`);
-        es.onmessage = async (ev) => {
+        es.onmessage = async ev => {
           try {
             const payload = JSON.parse(ev.data);
             if (payload.type === "plan") {
               progressLog.append("plan", `计划抓取 ${payload.pages} 页`);
             } else if (payload.type === "page") {
-              progressLog.append("page", `抓取第 ${payload.index}/${payload.total} 页：${payload.url}`);
+              progressLog.append(
+                "page",
+                `抓取第 ${payload.index}/${payload.total} 页：${payload.url}`
+              );
             } else if (payload.type === "fallback") {
-              progressLog.append("fallback", `抓取失败，使用浏览器渲染尝试提取（原因：${payload.reason}）`);
+              progressLog.append(
+                "fallback",
+                `抓取失败，使用浏览器渲染尝试提取（原因：${payload.reason}）`
+              );
             } else if (payload.type === "page_done") {
-              progressLog.append("page_done", `页面完成，新增图片 ${payload.added} 张`);
+              progressLog.append(
+                "page_done",
+                `页面完成，新增图片 ${payload.added} 张`
+              );
             } else if (payload.type === "discover") {
               progressLog.append("discover", `共发现图片 ${payload.count} 张`);
             } else if (payload.type === "complete") {
-              progressLog.append("complete", `下载完成：保存 ${payload.saved} 张到 ${payload.outDir}`);
+              progressLog.append(
+                "complete",
+                `下载完成：保存 ${payload.saved} 张到 ${payload.outDir}`
+              );
             } else if (payload.type === "result") {
               const data = payload.result || {};
-              status.textContent = `完成：发现 ${data.count || 0} 张，已保存 ${data.saved?.length || 0} 张到 ${data.outDir || ''}`;
+              status.textContent = `完成：发现 ${data.count || 0} 张，已保存 ${
+                data.saved?.length || 0
+              } 张到 ${data.outDir || ""}`;
               status.className = "status ok";
               es.close();
               await loadImages();
               btn.disabled = false;
             } else if (payload.type === "error") {
-              progressLog.append("error", `错误：${payload.error || '未知错误'}`);
-              status.textContent = `错误：${payload.error || '未知错误'}`;
+              progressLog.append(
+                "error",
+                `错误：${payload.error || "未知错误"}`
+              );
+              status.textContent = `错误：${payload.error || "未知错误"}`;
               status.className = "status error";
               es.close();
               btn.disabled = false;
@@ -358,7 +455,9 @@
         es.onerror = () => {
           status.textContent = "错误：进度连接中断";
           status.className = "status error";
-          try { es.close(); } catch {}
+          try {
+            es.close();
+          } catch {}
           btn.disabled = false;
         };
       } catch (e) {
@@ -387,7 +486,9 @@
     applyTheme(saved);
     if (btn) {
       btn.addEventListener("click", () => {
-        const current = document.body.classList.contains("dark") ? "dark" : "light";
+        const current = document.body.classList.contains("dark")
+          ? "dark"
+          : "light";
         applyTheme(current === "dark" ? "light" : "dark");
       });
     }
@@ -398,7 +499,9 @@
     const closeBtn = modal ? modal.querySelector(".close") : null;
     // 进度日志模态层
     const progressModal = document.getElementById("progress-modal");
-    const progressCloseBtn = progressModal ? progressModal.querySelector(".close") : null;
+    const progressCloseBtn = progressModal
+      ? progressModal.querySelector(".close")
+      : null;
     /** 打开预览模态层并设置图片地址 */
     const openPreview = src => {
       if (!modal || !modalImg) return;
@@ -430,7 +533,8 @@
     }
     // 进度模态关闭交互：按钮与点击遮罩
     const closeProgress = () => progressLog.hide();
-    if (progressCloseBtn) progressCloseBtn.addEventListener("click", closeProgress);
+    if (progressCloseBtn)
+      progressCloseBtn.addEventListener("click", closeProgress);
     if (progressModal) {
       progressModal.addEventListener("click", ev => {
         if (ev.target === progressModal) closeProgress();

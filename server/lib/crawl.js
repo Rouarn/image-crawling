@@ -320,9 +320,7 @@ async function resolvePages(baseUrl, opts = {}) {
       clearTimeout(t);
       if (!res.ok) break;
       const html = await res.text();
-      console.log("html: ", html);
       const $ = load(html);
-      console.log("$ :", $);
       const next = findNextUrl($, current);
       if (!next) break;
       const nextOrigin = new URL(next).origin;

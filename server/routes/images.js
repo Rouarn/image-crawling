@@ -63,4 +63,34 @@ router.get("/api/images", (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/images
+ * 请求体：{ name: string }，为 storage 下的相对路径，例如 "dir/file.jpg"
+ * 行为：物理删除对应文件，限定仅能删除 STORAGE_ROOT 内部文件。
+ */
+router.delete("/api/images", (req, res) => {
+  try {
+    const nameRaw = (req.body?.name || req.query?.name || "").toString();
+    if (!nameRaw) return res.status(400).json({ error: "必须提供 name" });
+    // 统一分隔符，防路径穿越
+    const rel = nameRaw.replace(/\\/g, "/").replace(/^\/+/, "");
+    const abs = path.resolve(STORAGE_ROOT, rel);
+    // 只允许删除 storage 目录内部文件
+    if (!abs.startsWith(STORAGE_ROOT)) {
+      return res.status(400).json({ error: "非法路径" });
+    }
+    if (!fs.existsSync(abs)) {
+      return res.status(404).json({ error: "文件不存在" });
+    }
+    const stat = fs.statSync(abs);
+    if (!stat.isFile()) {
+      return res.status(400).json({ error: "仅支持删除文件" });
+    }
+    fs.unlinkSync(abs);
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ error: e.message || String(e) });
+  }
+});
+
 export default router;
