@@ -114,8 +114,8 @@ async function downloadImage(u, outDir, usedNames, options) {
   const timeoutMs = options?.fetchTimeoutMs || 15000;
   const t = setTimeout(() => controller.abort(), timeoutMs);
 
-  // 使用更新后的defaultHeaders函数，指定类型为image并传入referer
-  const referer = new URL(u).origin;
+  // 优先使用外部传入的页面 Referer，未提供则回退为图片源站
+  const referer = options?.referer || new URL(u).origin;
   const headers = defaultHeaders("image", referer);
 
   // 合并用户自定义头
@@ -156,25 +156,110 @@ async function downloadImage(u, outDir, usedNames, options) {
  * @param {Set<string>} urlsSet 去重集合
  */
 function extractImages($, pageUrl, urlsSet) {
-  $("img").each((_, el) => {
-    const src = $(el).attr("src");
-    if (src) {
-      try {
-        const abs = new URL(src, pageUrl).href;
-        if (!abs.startsWith("data:")) urlsSet.add(abs);
-      } catch {}
+  const toAbs = u => {
+    try {
+      return new URL(u, pageUrl).href;
+    } catch {
+      return null;
     }
-    const srcset = $(el).attr("srcset");
-    if (srcset) {
-      srcset.split(",").forEach(part => {
-        const urlPart = part.trim().split(" ")[0];
-        if (urlPart) {
-          try {
-            const abs2 = new URL(urlPart, pageUrl).href;
-            if (!abs2.startsWith("data:")) urlsSet.add(abs2);
-          } catch {}
-        }
+  };
+  const pickFromSrcset = srcset => {
+    // 选择最大尺寸候选（按 w/x 值）
+    const parts = String(srcset || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+    let best = { url: null, score: -1 };
+    for (const p of parts) {
+      const [u, size] = p.split(/\s+/);
+      let score = 0;
+      if (/\d+w/i.test(p))
+        score = parseInt((p.match(/(\d+)w/i) || [0, 0])[1]) || 0;
+      else if (/\d+(\.\d+)?x/i.test(p))
+        score =
+          Math.round(
+            parseFloat((p.match(/(\d+(?:\.\d+)?)x/i) || [0, 0])[1]) * 100
+          ) || 0;
+      const abs = toAbs(u);
+      if (abs && !abs.startsWith("data:") && score >= best.score)
+        best = { url: abs, score };
+    }
+    return best.url;
+  };
+
+  // img: 支持 src 与常见懒加载属性
+  $("img").each((_, el) => {
+    const $el = $(el);
+    const candidates = [
+      $el.attr("src"),
+      $el.attr("data-src"),
+      $el.attr("data-original"),
+      $el.attr("data-lazy"),
+      $el.attr("data-url"),
+      $el.attr("data-actualsrc"),
+    ];
+    for (const c of candidates) {
+      if (!c) continue;
+      const abs = toAbs(c);
+      if (abs && !abs.startsWith("data:")) {
+        urlsSet.add(abs);
+        break;
+      }
+    }
+    const srcset = $el.attr("srcset") || $el.attr("data-srcset");
+    const best = srcset ? pickFromSrcset(srcset) : null;
+    if (best) urlsSet.add(best);
+  });
+
+  // picture/source: 选择最佳 srcset
+  $("picture").each((_, pic) => {
+    const $pic = $(pic);
+    let bestUrl = null;
+    $pic.find("source").each((_, s) => {
+      const u = pickFromSrcset($(s).attr("srcset") || "");
+      if (u) bestUrl = u;
+    });
+    if (bestUrl) urlsSet.add(bestUrl);
+    const img = $pic.find("img").attr("src");
+    const abs = img ? toAbs(img) : null;
+    if (abs && !abs.startsWith("data:")) urlsSet.add(abs);
+  });
+
+  // noscript 中的图片（部分站点把原图放在 noscript）
+  $("noscript").each((_, ns) => {
+    const html = $(ns).html() || "";
+    if (!html.trim()) return;
+    try {
+      const $x = load(html);
+      $x("img").each((__, el) => {
+        const src = $x(el).attr("src");
+        const abs = src ? toAbs(src) : null;
+        if (abs && !abs.startsWith("data:")) urlsSet.add(abs);
+        const ss = $x(el).attr("srcset");
+        const best = ss ? pickFromSrcset(ss) : null;
+        if (best) urlsSet.add(best);
       });
+    } catch {}
+  });
+
+  // 内联样式背景图（仅限 style 属性）
+  $("*[style]").each((_, el) => {
+    const style = String($(el).attr("style") || "");
+    const m = style.match(/background-image\s*:\s*url\((['"]?)([^)'"]+)\1\)/i);
+    if (m && m[2]) {
+      const abs = toAbs(m[2]);
+      if (abs) urlsSet.add(abs);
+    }
+  });
+
+  // 非 img 元素上的 data-src / data-original（例如容器节点）
+  $('[data-src], [data-original]').each((_, el) => {
+    const $el = $(el);
+    const candidates = [$el.attr('data-src'), $el.attr('data-original')];
+    for (const c of candidates) {
+      if (!c) continue;
+      const abs = toAbs(c);
+      if (abs && !abs.startsWith('data:')) { urlsSet.add(abs); break; }
     }
   });
 }
@@ -410,7 +495,7 @@ export async function crawlImagesWithPagination(baseUrl, opts) {
       opts.onProgress({ type: "discover", count: list.length });
     } catch {}
   }
-  const saved = await downloadAll(list, outDir, opts);
+  const saved = await downloadAll(list, outDir, { ...opts, referer: baseUrl });
   console.log("全部完成。");
   if (typeof opts.onProgress === "function") {
     try {
@@ -511,6 +596,26 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
       waitUntil: "networkidle2",
       timeout: Number(opts.fetchTimeoutMs || 30000),
     });
+    // 滚动触发懒加载
+    const steps = Number(opts.scrollSteps || 12);
+    const waitMs = Number(opts.scrollWaitMs || 500);
+    for (let i = 0; i < steps; i++) {
+      await page.evaluate(ratio => {
+        const h = Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        );
+        const y = Math.round(ratio * h);
+        window.scrollTo({ top: y, behavior: "instant" });
+      }, (i + 1) / steps);
+      if (typeof opts.onProgress === "function") {
+        try {
+          opts.onProgress({ type: "scroll", step: i + 1, total: steps });
+        } catch {}
+      }
+      await delay(waitMs);
+    }
+
     const urls = await page.evaluate(() => {
       const set = new Set();
       const absUrl = u => {
@@ -520,20 +625,77 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
           return null;
         }
       };
+      const pickFromSrcset = srcset => {
+        const parts = String(srcset || "")
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean);
+        let best = { url: null, score: -1 };
+        for (const p of parts) {
+          const u = p.split(/\s+/)[0];
+          let score = 0;
+          const mW = p.match(/(\d+)w/i);
+          const mX = p.match(/(\d+(?:\.\d+)?)x/i);
+          if (mW) score = parseInt(mW[1]) || 0;
+          else if (mX) score = Math.round(parseFloat(mX[1]) * 100) || 0;
+          const abs = absUrl(u);
+          if (abs && !abs.startsWith("data:") && score >= best.score)
+            best = { url: abs, score };
+        }
+        return best.url;
+      };
+      // img 懒加载属性
       document.querySelectorAll("img").forEach(img => {
-        const src = img.getAttribute("src");
-        if (src) {
-          const abs = absUrl(src);
+        const candidates = [
+          img.getAttribute("src"),
+          img.getAttribute("data-src"),
+          img.getAttribute("data-original"),
+          img.getAttribute("data-lazy"),
+          img.getAttribute("data-url"),
+          img.getAttribute("data-actualsrc"),
+        ];
+        for (const c of candidates) {
+          if (!c) continue;
+          const abs = absUrl(c);
+          if (abs && !abs.startsWith("data:")) {
+            set.add(abs);
+            break;
+          }
+        }
+        const best = pickFromSrcset(
+          img.getAttribute("srcset") || img.getAttribute("data-srcset") || ""
+        );
+        if (best) set.add(best);
+      });
+      // picture/source
+      document.querySelectorAll("picture").forEach(pic => {
+        let best = null;
+        pic.querySelectorAll("source").forEach(s => {
+          const u = pickFromSrcset(s.getAttribute("srcset") || "");
+          if (u) best = u;
+        });
+        if (best) set.add(best);
+        const img = pic.querySelector("img");
+        const abs =
+          img && img.getAttribute("src")
+            ? absUrl(img.getAttribute("src"))
+            : null;
+        if (abs && !abs.startsWith("data:")) set.add(abs);
+      });
+      // noscript
+      document.querySelectorAll("noscript").forEach(ns => {
+        const html = ns.innerHTML || "";
+        if (!html.trim()) return;
+        const div = document.createElement("div");
+        div.innerHTML = html;
+        div.querySelectorAll("img").forEach(img => {
+          const abs = img.getAttribute("src")
+            ? absUrl(img.getAttribute("src"))
+            : null;
           if (abs && !abs.startsWith("data:")) set.add(abs);
-        }
-        const srcset = img.getAttribute("srcset");
-        if (srcset) {
-          srcset.split(",").forEach(part => {
-            const u = part.trim().split(" ")[0];
-            const abs = absUrl(u);
-            if (abs && !abs.startsWith("data:")) set.add(abs);
-          });
-        }
+          const best = pickFromSrcset(img.getAttribute("srcset") || "");
+          if (best) set.add(best);
+        });
       });
       document.querySelectorAll("*").forEach(el => {
         const bg = getComputedStyle(el).backgroundImage;
