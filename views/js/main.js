@@ -540,6 +540,21 @@
         if (ev.target === progressModal) closeProgress();
       });
     }
+    // 返回顶部按钮：滚动时显示，点击平滑回顶
+    const backTopBtn = document.getElementById("back-to-top");
+    if (backTopBtn) {
+      const toggleBackTop = () => {
+        const show = window.scrollY > 200;
+        backTopBtn.classList.toggle("is-visible", show);
+      };
+      window.addEventListener("scroll", toggleBackTop, { passive: true });
+      window.addEventListener("resize", toggleBackTop);
+      toggleBackTop();
+      backTopBtn.addEventListener("click", ev => {
+        ev.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
     document.addEventListener("keydown", ev => {
       if (ev.key === "Escape") {
         closePreview();
