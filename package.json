@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node ./server/app.js"
+    "start": "node ./server/app.js",
+    "capture": "node ./scripts/capture-screenshots.js"
   },
   "keywords": [],
   "author": "",
