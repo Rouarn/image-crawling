@@ -191,12 +191,12 @@ function extractImages($, pageUrl, urlsSet) {
   $("img").each((_, el) => {
     const $el = $(el);
     const candidates = [
-      $el.attr("src"),
-      $el.attr("data-src"),
       $el.attr("data-original"),
+      $el.attr("data-src"),
       $el.attr("data-lazy"),
       $el.attr("data-url"),
       $el.attr("data-actualsrc"),
+      $el.attr("src"),
     ];
     for (const c of candidates) {
       if (!c) continue;
@@ -253,13 +253,16 @@ function extractImages($, pageUrl, urlsSet) {
   });
 
   // 非 img 元素上的 data-src / data-original（例如容器节点）
-  $('[data-src], [data-original]').each((_, el) => {
+  $("[data-src], [data-original]").each((_, el) => {
     const $el = $(el);
-    const candidates = [$el.attr('data-src'), $el.attr('data-original')];
+    const candidates = [$el.attr("data-src"), $el.attr("data-original")];
     for (const c of candidates) {
       if (!c) continue;
       const abs = toAbs(c);
-      if (abs && !abs.startsWith('data:')) { urlsSet.add(abs); break; }
+      if (abs && !abs.startsWith("data:")) {
+        urlsSet.add(abs);
+        break;
+      }
     }
   });
 }
@@ -317,7 +320,9 @@ async function resolvePages(baseUrl, opts = {}) {
       clearTimeout(t);
       if (!res.ok) break;
       const html = await res.text();
+      console.log("html: ", html);
       const $ = load(html);
+      console.log("$ :", $);
       const next = findNextUrl($, current);
       if (!next) break;
       const nextOrigin = new URL(next).origin;
