@@ -532,6 +532,14 @@ body.dark .progress-log .log-item {
   border-left-color: #ef4444;
 }
 
+/* 进度模态中的展示尺寸 */
+.modal .progress-log {
+  width: 640px;
+  max-width: 86vw;
+  max-height: 70vh;
+  margin-top: 0;
+}
+
 /* ========================= 高级字段：自定义请求头 ========================= */
 .headers-field {
   position: relative;

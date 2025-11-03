@@ -91,8 +91,15 @@
               <div class="grid">
                 <label class="headers-field" style="grid-column: 1 / -1">
                   自定义请求头 (JSON 可选)
-                  <textarea name="headers" rows="4" placeholder='例如：{"user-agent":"Mozilla/5.0 ...","cookie":"a=b; c=d"}'></textarea>
-                  <small>留空则使用默认。建议按需设置如 user-agent、cookie、authorization 等。</small>
+                  <textarea
+                    name="headers"
+                    rows="4"
+                    placeholder='例如：{"user-agent":"Mozilla/5.0 ...","cookie":"a=b; c=d"}'
+                  ></textarea>
+                  <small
+                    >留空则使用默认。建议按需设置如
+                    user-agent、cookie、authorization 等。</small
+                  >
                 </label>
               </div>
               <div class="form-actions">
@@ -100,7 +107,7 @@
                 <span id="status" class="status"></span>
               </div>
 
-              <div id="progress" class="progress-log hidden" style="display:none" aria-live="polite"></div>
+              <!-- 进度日志已移动到模态层中显示 -->
             </form>
           </div>
 
@@ -155,6 +162,22 @@
         <div class="modal-inner">
           <button class="close" aria-label="关闭预览">×</button>
           <img id="preview-img" alt="预览图" />
+        </div>
+      </div>
+
+      <!-- 进度日志模态层 -->
+      <div
+        id="progress-modal"
+        class="modal"
+        aria-hidden="true"
+        role="dialog"
+        aria-label="抓取进度"
+      >
+        <div class="modal-inner">
+          <button class="close" aria-label="关闭进度">×</button>
+          <div id="progress" class="progress-log" aria-live="polite">
+            <!-- 进度日志内容将动态填充 -->
+          </div>
         </div>
       </div>
     </main>

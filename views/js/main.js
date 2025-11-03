@@ -55,15 +55,21 @@
     getBox() { return document.getElementById("progress"); },
     show() {
       const box = this.getBox();
-      if (!box) return;
+      const modal = document.getElementById("progress-modal");
+      if (!box || !modal) return;
       box.classList.remove("hidden");
       box.style.display = "";
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
     },
     hide() {
       const box = this.getBox();
-      if (!box) return;
+      const modal = document.getElementById("progress-modal");
+      if (!box || !modal) return;
       box.classList.add("hidden");
       box.style.display = "none";
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
     },
     clear() {
       const box = this.getBox();
@@ -390,6 +396,9 @@
     const modal = document.getElementById("preview-modal");
     const modalImg = document.getElementById("preview-img");
     const closeBtn = modal ? modal.querySelector(".close") : null;
+    // 进度日志模态层
+    const progressModal = document.getElementById("progress-modal");
+    const progressCloseBtn = progressModal ? progressModal.querySelector(".close") : null;
     /** 打开预览模态层并设置图片地址 */
     const openPreview = src => {
       if (!modal || !modalImg) return;
@@ -419,8 +428,19 @@
         if (ev.target === modal) closePreview();
       });
     }
+    // 进度模态关闭交互：按钮与点击遮罩
+    const closeProgress = () => progressLog.hide();
+    if (progressCloseBtn) progressCloseBtn.addEventListener("click", closeProgress);
+    if (progressModal) {
+      progressModal.addEventListener("click", ev => {
+        if (ev.target === progressModal) closeProgress();
+      });
+    }
     document.addEventListener("keydown", ev => {
-      if (ev.key === "Escape") closePreview();
+      if (ev.key === "Escape") {
+        closePreview();
+        closeProgress();
+      }
     });
   });
 })();
