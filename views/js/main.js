@@ -322,6 +322,12 @@
     if (urlInput && outDirInput) {
       urlInput.addEventListener("input", () => {
         const v = urlInput.value.trim();
+        // 当目标页面 URL 被清空时，同步清空输出目录
+        if (!v) {
+          outDirInput.value = "";
+          outDirInput.dataset.autofill = "";
+          return;
+        }
         const derived = deriveOutDir(v);
         if (!derived) return;
         const prev = outDirInput.value.trim();
@@ -344,6 +350,52 @@
       // 用户手动修改输出目录时，取消自动填充标记
       outDirInput.addEventListener("input", () => {
         outDirInput.dataset.autofill = "";
+      });
+    }
+    const maxPagesInput = form.querySelector('input[name="maxPages"]');
+    const startPageInput = form.querySelector('input[name="startPage"]');
+    const endPageInput = form.querySelector('input[name="endPage"]');
+    if (maxPagesInput && startPageInput && endPageInput) {
+      const applyFromMaxPages = () => {
+        const v = Number(maxPagesInput.value);
+        if (!Number.isFinite(v) || v < 1) return;
+        startPageInput.value = "1";
+        endPageInput.value = String(v);
+      };
+      maxPagesInput.addEventListener("input", applyFromMaxPages);
+      maxPagesInput.addEventListener("blur", applyFromMaxPages);
+    }
+    // “插入{page}”按钮：在分页模式输入的当前光标位置插入占位符
+    const insertBtn = document.getElementById("insert-page-placeholder");
+    const pagePatternInput = form.querySelector('input[name="pagePattern"]');
+    if (insertBtn && pagePatternInput) {
+      insertBtn.addEventListener("click", ev => {
+        ev.preventDefault();
+        const el = pagePatternInput;
+        const placeholder = "{page}";
+        el.focus();
+        const value = el.value || "";
+        const start = typeof el.selectionStart === "number" ? el.selectionStart : value.length;
+        const end = typeof el.selectionEnd === "number" ? el.selectionEnd : start;
+        if (!value.includes(placeholder)) {
+          el.value = value.slice(0, start) + placeholder + value.slice(end);
+          const caret = start + placeholder.length;
+          try { el.setSelectionRange(caret, caret); } catch {}
+        } else {
+          // 若已存在占位符，则将光标移至首次占位符之后
+          const idx = value.indexOf(placeholder);
+          const caret = idx + placeholder.length;
+          try { el.setSelectionRange(caret, caret); } catch {}
+        }
+        // 触发 input 事件，保持一致的联动行为
+        try { el.dispatchEvent(new Event("input", { bubbles: true })); } catch {}
+        // 若起始/结束页为空，进行合理预填：起始=1，结束=最大页数
+        const sp = form.querySelector('input[name="startPage"]');
+        const ep = form.querySelector('input[name="endPage"]');
+        const mp = form.querySelector('input[name="maxPages"]');
+        if (sp && !sp.value) sp.value = "1";
+        const mv = mp ? Number(mp.value) : NaN;
+        if (ep && !ep.value && Number.isFinite(mv) && mv >= 1) ep.value = String(mv);
       });
     }
     form.addEventListener("submit", async ev => {

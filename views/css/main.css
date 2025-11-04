@@ -146,6 +146,7 @@ form#crawl-form {
 label {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   font-size: 13px;
   color: #333;
 }
@@ -270,6 +271,8 @@ p.muted {
   align-items: center;
   gap: 8px;
   margin: 6px 0 12px;
+  max-height: 150px;
+  overflow-y: auto;
 }
 .images-controls .tab {
   padding: 6px 10px;
@@ -605,6 +608,50 @@ body.dark .headers-field {
 }
 body.dark .headers-field textarea {
   background: #0d1116;
+}
+
+/* ========================= 分页模式插入按钮 ========================= */
+.field-inline {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.field-inline > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.inline-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease,
+    transform 0.08s ease;
+}
+.inline-btn:hover {
+  background: rgba(132, 94, 247, 0.08);
+  border-color: #845ef7;
+}
+.inline-btn:active {
+  transform: scale(0.98);
+}
+.inline-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.25);
+}
+body.dark .inline-btn {
+  background: #0d1116;
+  border-color: #2e333a;
+  color: #c9d1d9;
+}
+body.dark .inline-btn:hover {
+  background: rgba(132, 94, 247, 0.12);
+  border-color: #845ef7;
 }
 
 /* ========================= 返回顶部按钮 ========================= */
