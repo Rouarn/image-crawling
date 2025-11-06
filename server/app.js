@@ -12,6 +12,7 @@ import indexRouter from "./routes/index.js";
 import crawlRouter from "./routes/crawl.js";
 import imagesRouter from "./routes/images.js";
 import { notFound, errorHandler } from "./middlewares/errors.js";
+import open from "open";
 
 // ============ Web 服务 ============
 // 确保 storage 根目录存在（供下载与列表使用）
@@ -36,5 +37,9 @@ app.use(notFound);
 app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`服务器已启动：http://localhost:${PORT}`);
+  const url = `http://localhost:${PORT}`;
+  console.log(`服务器已启动：${url}`);
+  // 启动后，自动打开浏览器
+  const openOpts = { wait: false };
+  open(url, { ...openOpts, app: { name: "chrome" } });
 });
