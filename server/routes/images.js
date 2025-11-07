@@ -93,4 +93,36 @@ router.delete("/api/images", (req, res) => {
   }
 });
 
+/**
+ * GET /api/images/info
+ * 查询指定图片的磁盘信息（当前返回字节大小与修改时间）。
+ * 请求参数：name 相对路径，例如 "dir/file.jpg"
+ */
+router.get("/api/images/info", (req, res) => {
+  try {
+    const nameRaw = (req.query?.name || "").toString();
+    if (!nameRaw) return res.status(400).json({ error: "必须提供 name" });
+    // 统一分隔符并去除开头斜杠，防止路径穿越
+    const rel = nameRaw.replace(/\\/g, "/").replace(/^\/+/, "");
+    const abs = path.resolve(STORAGE_ROOT, rel);
+    if (!abs.startsWith(STORAGE_ROOT)) {
+      return res.status(400).json({ error: "非法路径" });
+    }
+    if (!fs.existsSync(abs)) {
+      return res.status(404).json({ error: "文件不存在" });
+    }
+    const stat = fs.statSync(abs);
+    if (!stat.isFile()) {
+      return res.status(400).json({ error: "仅支持文件" });
+    }
+    return res.json({
+      name: rel,
+      bytes: stat.size,
+      mtimeMs: stat.mtimeMs,
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message || String(e) });
+  }
+});
+
 export default router;
