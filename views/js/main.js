@@ -11,37 +11,32 @@
   - 用户提交表单 → POST /api/crawl → 成功后再次 loadImages()；
   - 用户点击缩略图 → 打开预览 → 点击遮罩/关闭或按 ESC → 关闭预览。
 */
+
 (function () {
-    /** 渲染骨架屏占位 */
+    /** 渲染骨架屏占位（使用 jQuery） */
     function renderSkeleton(box, count = 8) {
         if (!box) return;
-        const frag = document.createDocumentFragment();
+        const $box = $(box);
+        $box.empty();
         for (let i = 0; i < count; i++) {
-            const div = document.createElement("div");
-            div.className = "thumb";
-            const sk = document.createElement("div");
-            sk.className = "skeleton skeleton-thumb";
-            div.appendChild(sk);
-            const cap = document.createElement("div");
-            cap.className = "skeleton";
-            cap.style.height = "12px";
-            cap.style.borderRadius = "6px";
-            cap.style.marginTop = "8px";
-            div.appendChild(cap);
-            frag.appendChild(div);
+            const $div = $("<div/>").addClass("thumb");
+            const $sk = $("<div/>").addClass("skeleton skeleton-thumb");
+            const $cap = $("<div/>")
+                .addClass("skeleton")
+                .css({ height: "12px", borderRadius: "6px", marginTop: "8px" });
+            $div.append($sk).append($cap);
+            $box.append($div);
         }
-        box.innerHTML = "";
-        box.appendChild(frag);
     }
 
-    /** 根据输入框内容筛选当前缩略图 */
+    /** 根据输入框内容筛选当前缩略图（使用 jQuery） */
     function applyFilter() {
-        const input = document.getElementById("images-filter");
-        const q = (input && input.value ? input.value : "").trim().toLowerCase();
-        const thumbs = document.querySelectorAll("#images .thumb");
-        thumbs.forEach(t => {
-            const name = (t.dataset.name || "").toLowerCase();
-            t.style.display = q ? (name.includes(q) ? "" : "none") : "";
+        const q = (($("#images-filter").val() || "") + "")
+            .trim()
+            .toLowerCase();
+        $("#images .thumb").each(function () {
+            const name = String($(this).data("name") || "").toLowerCase();
+            $(this).css("display", q ? (name.includes(q) ? "" : "none") : "");
         });
     }
 
@@ -53,30 +48,26 @@
      */
     const progressLog = {
         getBox() {
-            return document.getElementById("progress");
+            return $("#progress");
         },
         show() {
-            const box = this.getBox();
-            const modal = document.getElementById("progress-modal");
-            if (!box || !modal) return;
-            box.classList.remove("hidden");
-            box.style.display = "";
-            modal.classList.add("show");
-            modal.setAttribute("aria-hidden", "false");
+            const $box = this.getBox();
+            const $modal = $("#progress-modal");
+            if ($box.length === 0 || $modal.length === 0) return;
+            $box.removeClass("hidden").css("display", "");
+            $modal.addClass("show").attr("aria-hidden", "false");
         },
         hide() {
-            const box = this.getBox();
-            const modal = document.getElementById("progress-modal");
-            if (!box || !modal) return;
-            box.classList.add("hidden");
-            box.style.display = "none";
-            modal.classList.remove("show");
-            modal.setAttribute("aria-hidden", "true");
+            const $box = this.getBox();
+            const $modal = $("#progress-modal");
+            if ($box.length === 0 || $modal.length === 0) return;
+            $box.addClass("hidden").css("display", "none");
+            $modal.removeClass("show").attr("aria-hidden", "true");
         },
         clear() {
-            const box = this.getBox();
-            if (!box) return;
-            box.textContent = "";
+            const $box = this.getBox();
+            if ($box.length === 0) return;
+            $box.empty();
         },
         nowStr() {
             const d = new Date();
@@ -95,71 +86,52 @@
             error: "⚠️",
         },
         append(type, msg) {
-            const box = this.getBox();
-            if (!box) return;
+            const $box = this.getBox();
+            if ($box.length === 0) return;
             const nearBottom =
-                box.scrollTop + box.clientHeight >= box.scrollHeight - 8;
-            const row = document.createElement("div");
-            row.className = `log-item log-${type}`;
-            const icon = document.createElement("span");
-            icon.className = "icon";
-            icon.textContent = this.icons[type] || "ℹ️";
-            const text = document.createElement("span");
-            text.className = "text";
-            text.textContent = String(msg || "");
-            const time = document.createElement("span");
-            time.className = "time";
-            time.textContent = this.nowStr();
-            row.appendChild(icon);
-            row.appendChild(text);
-            row.appendChild(time);
-            box.appendChild(row);
+                $box.prop("scrollTop") + $box.prop("clientHeight") >= $box.prop("scrollHeight") - 8;
+            const $row = $("<div/>").addClass(`log-item log-${type}`);
+            const $icon = $("<span/>").addClass("icon").text(this.icons[type] || "ℹ️");
+            const $text = $("<span/>").addClass("text").text(String(msg || ""));
+            const $time = $("<span/>").addClass("time").text(this.nowStr());
+            $row.append($icon, $text, $time);
+            $box.append($row);
             const maxItems = 300;
-            while (box.children.length > maxItems) {
-                box.removeChild(box.firstChild);
+            while ($box.children().length > maxItems) {
+                $box.children().first().remove();
             }
             if (nearBottom) {
-                box.scrollTop = box.scrollHeight;
+                $box.prop("scrollTop", $box.prop("scrollHeight"));
             }
         },
     };
 
     /** 创建并返回一个缩略图元素 */
     function createThumbnailElement(filename, onDelete) {
-        const div = document.createElement("div");
-        div.className = "thumb";
-        div.dataset.name = filename;
-
-        const img = document.createElement("img");
-        img.loading = "lazy";
-        img.src = encodeURI("/storage/" + filename);
-        img.alt = filename;
-        img.title = filename;
-
-        const cap = document.createElement("div");
-        cap.textContent = filename;
-
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "delete-btn";
-        del.title = "删除";
-        del.textContent = "🗑️";
-
-        del.addEventListener("click", async ev => {
+        const $div = $("<div/>").addClass("thumb").data("name", filename);
+        const $img = $("<img/>")
+            .attr({
+                loading: "lazy",
+                src: encodeURI("/storage/" + filename),
+                alt: filename,
+                title: filename,
+            });
+        const $cap = $("<div/>").text(filename);
+        const $del = $("<button/>")
+            .attr({ type: "button", title: "删除" })
+            .addClass("delete-btn")
+            .text("🗑️");
+        $del.on("click", async ev => {
             ev.stopPropagation();
-            del.disabled = true;
+            $del.prop("disabled", true);
             try {
-                await onDelete(filename, div);
+                await onDelete(filename, $div);
             } finally {
-                del.disabled = false;
+                $del.prop("disabled", false);
             }
         });
-
-        div.appendChild(img);
-        div.appendChild(cap);
-        div.appendChild(del);
-
-        return div;
+        $div.append($img, $cap, $del);
+        return $div.get(0);
     }
 
 
@@ -171,99 +143,79 @@
      * - 否则兼容旧结构的 files 扁平数组，直接渲染所有缩略图。
      */
     async function loadImages() {
-        const box = document.getElementById("images");
-        if (box) renderSkeleton(box, 10);
+        const $box = $("#images");
+        if ($box.length) renderSkeleton($box.get(0), 10);
         try {
-            const res = await fetch("/api/images");
-            const data = await res.json();
-            box.innerHTML = "";
+            const data = await $.getJSON("/api/images");
+            $box.empty();
             const groups = data.groups;
             // 多目录展示方案：使用横向标签（tabs）切换目录，避免页面超高
             if (Array.isArray(groups) && groups.length) {
-                box.classList.remove("images");
-                const controls = document.createElement("div");
-                controls.className = "images-controls";
+                $box.removeClass("images");
+                const $controls = $("<div/>").addClass("images-controls");
                 const byName = new Map(groups.map(g => [g.dir, g.files || []]));
                 let active = groups[0].dir;
-                const grid = document.createElement("div");
-                grid.className = "images";
+                const $grid = $("<div/>").addClass("images");
                 const renderGrid = name => {
-                    grid.innerHTML = "";
+                    $grid.empty();
                     const files = byName.get(name) || [];
                     files.forEach(f => {
                         const thumbEl = createThumbnailElement(f, async (filename, element) => {
                             try {
-                                const resp = await fetch("/api/images", {
+                                const resp = await $.ajax({
+                                    url: "/api/images",
                                     method: "DELETE",
-                                    headers: {"content-type": "application/json"},
-                                    body: JSON.stringify({name: filename}),
+                                    contentType: "application/json",
+                                    data: JSON.stringify({ name: filename }),
                                 });
-                                if (resp.ok) {
-                                    element.remove();
+                                // jQuery.ajax resolves on HTTP 2xx; remove element
+                                $(element).remove();
                                     byName.get(active).splice(byName.get(active).indexOf(filename), 1);
-                                } else {
-                                    let msg = resp.statusText;
-                                    try {
-                                        const j = await resp.json();
-                                        if (j && j.error) msg = j.error;
-                                    } catch {
-                                    }
-                                    alert(`删除失败：${msg}`);
-                                }
+                                
                             } catch (e) {
-                                alert(`删除失败：${e.message || e}`);
+                                const msg = e?.responseJSON?.error || e?.statusText || (e?.message || e);
+                                alert(`删除失败：${msg}`);
                             }
                         });
-                        grid.appendChild(thumbEl);
+                        $grid.append(thumbEl);
                     });
                     applyFilter();
 
                 };
                 groups.forEach(g => {
-                    const btn = document.createElement("button");
-                    btn.type = "button";
-                    btn.className = "tab" + (g.dir === active ? " active" : "");
-                    btn.textContent = g.dir === "root" ? "根目录" : g.dir;
-                    btn.addEventListener("click", () => {
+                    const $btn = $("<button/>")
+                        .attr("type", "button")
+                        .addClass("tab" + (g.dir === active ? " active" : ""))
+                        .text(g.dir === "root" ? "根目录" : g.dir);
+                    $btn.on("click", () => {
                         active = g.dir;
-                        Array.from(controls.querySelectorAll(".tab")).forEach(el =>
-                            el.classList.remove("active")
-                        );
-                        btn.classList.add("active");
+                        $controls.find(".tab").removeClass("active");
+                        $btn.addClass("active");
                         renderGrid(active);
                     });
-                    controls.appendChild(btn);
+                    $controls.append($btn);
                 });
-                box.appendChild(controls);
-                box.appendChild(grid);
+                $box.append($controls).append($grid);
                 renderGrid(active);
             } else {
                 // 兼容旧结构：扁平 files 列表
                 (data.files || []).forEach(f => {
                     const thumbEl = createThumbnailElement(f, async (filename, element) => {
                         try {
-                            const resp = await fetch("/api/images", {
+                            const resp = await $.ajax({
+                                url: "/api/images",
                                 method: "DELETE",
-                                headers: {"content-type": "application/json"},
-                                body: JSON.stringify({name: filename}),
+                                contentType: "application/json",
+                                data: JSON.stringify({ name: filename }),
                             });
-                            if (resp.ok) {
-                                element.remove();
+                            $(element).remove();
                                 data.files.splice(data.files.indexOf(filename), 1);
-                            } else {
-                                let msg = resp.statusText;
-                                try {
-                                    const j = await resp.json();
-                                    if (j && j.error) msg = j.error;
-                                } catch {
-                                }
-                                alert(`删除失败：${msg}`);
-                            }
                         } catch (e) {
-                            alert(`删除失败：${e.message || e}`);
+                            const msg = e?.responseJSON?.error || e?.statusText || (e?.message || e);
+                            alert(`删除失败：${msg}`);
                         }
                     });
-                    box.appendChild(thumbEl);
+                    $box.append(thumbEl);
                 });
                 applyFilter();
 
@@ -280,11 +232,11 @@
      * - 展示状态文本与错误信息，并在成功后刷新图片列表。
      */
     function setupForm() {
-        const form = document.getElementById("crawl-form");
-        if (!form) return;
+        const $form = $("#crawl-form");
+        if ($form.length === 0) return;
         // 根据 URL 自动填充输出目录：取路径最后一段，去掉后缀并规范化
-        const urlInput = form.querySelector('input[name="url"]');
-        const outDirInput = form.querySelector('input[name="outDir"]');
+        const $urlInput = $form.find('input[name="url"]');
+        const $outDirInput = $form.find('input[name="outDir"]');
         /**
          * 从原始 URL 文本派生稳定的目录名：
          * - 首选使用 URL 的最后路径段；若为空再回退到域名（去除 www.）；
@@ -317,59 +269,59 @@
                 .toLowerCase();
             return segment || "";
         };
-        if (urlInput && outDirInput) {
-            urlInput.addEventListener("input", () => {
-                const v = urlInput.value.trim();
+        if ($urlInput.length && $outDirInput.length) {
+            $urlInput.on("input", () => {
+                const v = String($urlInput.val() || "").trim();
                 // 当目标页面 URL 被清空时，同步清空输出目录
                 if (!v) {
-                    outDirInput.value = "";
-                    outDirInput.dataset.autofill = "";
+                    $outDirInput.val("");
+                    $outDirInput.data("autofill", "");
                     return;
                 }
                 const derived = deriveOutDir(v);
                 if (!derived) return;
-                const prev = outDirInput.value.trim();
+                const prev = String($outDirInput.val() || "").trim();
                 // 若为空或之前为自动填充，则更新；避免覆盖用户手动修改
-                if (!prev || outDirInput.dataset.autofill === "1") {
-                    outDirInput.value = derived;
-                    outDirInput.dataset.autofill = "1";
+                if (!prev || $outDirInput.data("autofill") === "1") {
+                    $outDirInput.val(derived);
+                    $outDirInput.data("autofill", "1");
                 }
             });
-            urlInput.addEventListener("blur", () => {
-                const v = urlInput.value.trim();
-                if (!outDirInput.value.trim()) {
+            $urlInput.on("blur", () => {
+                const v = String($urlInput.val() || "").trim();
+                if (!String($outDirInput.val() || "").trim()) {
                     const derived = deriveOutDir(v);
                     if (derived) {
-                        outDirInput.value = derived;
-                        outDirInput.dataset.autofill = "1";
+                        $outDirInput.val(derived);
+                        $outDirInput.data("autofill", "1");
                     }
                 }
             });
             // 用户手动修改输出目录时，取消自动填充标记
-            outDirInput.addEventListener("input", () => {
-                outDirInput.dataset.autofill = "";
+            $outDirInput.on("input", () => {
+                $outDirInput.data("autofill", "");
             });
         }
-        const maxPagesInput = form.querySelector('input[name="maxPages"]');
-        const startPageInput = form.querySelector('input[name="startPage"]');
-        const endPageInput = form.querySelector('input[name="endPage"]');
-        if (maxPagesInput && startPageInput && endPageInput) {
+        const $maxPagesInput = $form.find('input[name="maxPages"]');
+        const $startPageInput = $form.find('input[name="startPage"]');
+        const $endPageInput = $form.find('input[name="endPage"]');
+        if ($maxPagesInput.length && $startPageInput.length && $endPageInput.length) {
             const applyFromMaxPages = () => {
-                const v = Number(maxPagesInput.value);
+                const v = Number($maxPagesInput.val());
                 if (!Number.isFinite(v) || v < 1) return;
-                startPageInput.value = "1";
-                endPageInput.value = String(v);
+                $startPageInput.val("1");
+                $endPageInput.val(String(v));
             };
-            maxPagesInput.addEventListener("input", applyFromMaxPages);
-            maxPagesInput.addEventListener("blur", applyFromMaxPages);
+            $maxPagesInput.on("input", applyFromMaxPages);
+            $maxPagesInput.on("blur", applyFromMaxPages);
         }
         // “插入{page}”按钮：在分页模式输入的当前光标位置插入占位符
-        const insertBtn = document.getElementById("insert-page-placeholder");
-        const pagePatternInput = form.querySelector('input[name="pagePattern"]');
-        if (insertBtn && pagePatternInput) {
-            insertBtn.addEventListener("click", ev => {
+        const $insertBtn = $("#insert-page-placeholder");
+        const $pagePatternInput = $form.find('input[name="pagePattern"]');
+        if ($insertBtn.length && $pagePatternInput.length) {
+            $insertBtn.on("click", ev => {
                 ev.preventDefault();
-                const el = pagePatternInput;
+                const el = $pagePatternInput.get(0);
                 const placeholder = "{page}";
                 el.focus();
                 const value = el.value || "";
@@ -393,42 +345,38 @@
                 }
                 // 触发 input 事件，保持一致地联动行为
                 try {
-                    el.dispatchEvent(new Event("input", {bubbles: true}));
+                    el.dispatchEvent(new Event("input", { bubbles: true }));
                 } catch {
                 }
                 // 若起始/结束页为空，进行合理预填：起始=1，结束=最大页数
-                const sp = form.querySelector('input[name="startPage"]');
-                const ep = form.querySelector('input[name="endPage"]');
-                const mp = form.querySelector('input[name="maxPages"]');
+                const sp = $form.find('input[name="startPage"]').get(0);
+                const ep = $form.find('input[name="endPage"]').get(0);
+                const mp = $form.find('input[name="maxPages"]').get(0);
                 if (sp && !sp.value) sp.value = "1";
                 const mv = mp ? Number(mp.value) : NaN;
                 if (ep && !ep.value && Number.isFinite(mv) && mv >= 1) ep.value = String(mv);
             });
         }
-        form.addEventListener("submit", async ev => {
+        $form.on("submit", async ev => {
             ev.preventDefault();
-            const status = document.getElementById("status");
-            const btn = form.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            status.textContent = "正在抓取...";
-            status.className = "status";
+            const $status = $("#status");
+            const $btn = $form.find('button[type="submit"]');
+            $btn.prop("disabled", true);
+            $status.text("正在抓取...").attr("class", "status");
             progressLog.clear();
             progressLog.show();
-            const formData = new FormData(form);
+            const formData = new FormData($form.get(0));
             const url = formData.get("url");
             // 读取并校验自定义请求头（JSON 可选）
             let headersObj;
-            const headersText = form
-                .querySelector('textarea[name="headers"]')
-                ?.value?.trim();
+            const headersText = ($form.find('textarea[name="headers"]').val() || "").trim();
             if (headersText) {
                 try {
                     const parsed = JSON.parse(headersText);
                     if (parsed && typeof parsed === "object") headersObj = parsed;
                 } catch (e) {
-                    status.textContent = "错误：请求头 JSON 无效";
-                    status.className = "status error";
-                    btn.disabled = false;
+                    $status.text("错误：请求头 JSON 无效").attr("class", "status error");
+                    $btn.prop("disabled", false);
                     return;
                 }
             }
@@ -445,7 +393,7 @@
                     ? Number(formData.get("endPage"))
                     : undefined,
                 useHeadless:
-                    form.querySelector('input[name="useHeadless"]')?.checked || undefined,
+                    $form.find('input[name="useHeadless"]').get(0)?.checked || undefined,
                 headers: headersObj,
             };
             try {
@@ -493,132 +441,119 @@
                             );
                         } else if (payload.type === "result") {
                             const data = payload.result || {};
-                            status.textContent = `完成：发现 ${data.count || 0} 张，已保存 ${
+                            $status.text(`完成：发现 ${data.count || 0} 张，已保存 ${
                                 data.saved?.length || 0
-                            } 张到 ${data.outDir || ""}`;
-                            status.className = "status ok";
+                            } 张到 ${data.outDir || ""}`)
+                                .attr("class", "status ok");
                             es.close();
                             await loadImages();
-                            btn.disabled = false;
+                            $btn.prop("disabled", false);
                         } else if (payload.type === "error") {
                             progressLog.append(
                                 "error",
                                 `错误：${payload.error || "未知错误"}`
                             );
-                            status.textContent = `错误：${payload.error || "未知错误"}`;
-                            status.className = "status error";
+                            $status.text(`错误：${payload.error || "未知错误"}`)
+                                .attr("class", "status error");
                             es.close();
-                            btn.disabled = false;
+                            $btn.prop("disabled", false);
                         }
                     } catch {
                     }
                 };
                 es.onerror = () => {
-                    status.textContent = "错误：进度连接中断";
-                    status.className = "status error";
+                    $status.text("错误：进度连接中断").attr("class", "status error");
                     try {
                         es.close();
                     } catch {
                     }
-                    btn.disabled = false;
+                    $btn.prop("disabled", false);
                 };
             } catch (e) {
-                status.textContent = `错误：${e.message || e}`;
-                status.className = "status error";
-                btn.disabled = false;
+                $status.text(`错误：${e.message || e}`).attr("class", "status error");
+                $btn.prop("disabled", false);
             }
         });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
+    $(function () {
         setupForm();
         loadImages().then(() => {
         });
         // 筛选交互
-        const input = document.getElementById("images-filter");
-        if (input) input.addEventListener("input", applyFilter);
+        const $input = $("#images-filter");
+        if ($input.length) $input.on("input", applyFilter);
         // 主题初始化与切换
-        const btn = document.getElementById("theme-toggle");
+        const $btnTheme = $("#theme-toggle");
         /** 切换主题并持久化到 localStorage */
         const applyTheme = theme => {
-            document.body.classList.toggle("dark", theme === "dark");
+            $(document.body).toggleClass("dark", theme === "dark");
             localStorage.setItem("theme", theme);
-            if (btn) btn.textContent = theme === "dark" ? "☀️" : "🌙";
+            if ($btnTheme.length) $btnTheme.text(theme === "dark" ? "☀️" : "🌙");
         };
         const saved = localStorage.getItem("theme") || "light";
         applyTheme(saved);
-        if (btn) {
-            btn.addEventListener("click", () => {
-                const current = document.body.classList.contains("dark")
-                    ? "dark"
-                    : "light";
+        if ($btnTheme.length) {
+            $btnTheme.on("click", () => {
+                const current = $(document.body).hasClass("dark") ? "dark" : "light";
                 applyTheme(current === "dark" ? "light" : "dark");
             });
         }
 
         // 缩略图点击预览
-        const modal = document.getElementById("preview-modal");
-        const modalImg = document.getElementById("preview-img");
-        const closeBtn = modal ? modal.querySelector(".close") : null;
+        const $modal = $("#preview-modal");
+        const $modalImg = $("#preview-img");
+        const $closeBtn = $modal.find(".close");
         // 进度日志模态层
-        const progressModal = document.getElementById("progress-modal");
-        const progressCloseBtn = progressModal
-            ? progressModal.querySelector(".close")
-            : null;
+        const $progressModal = $("#progress-modal");
+        const $progressCloseBtn = $progressModal.find(".close");
         /** 打开预览模态层并设置图片地址 */
         const openPreview = src => {
-            if (!modal || !modalImg) return;
-            modalImg.src = src;
-            modal.classList.add("show");
-            modal.setAttribute("aria-hidden", "false");
+            if ($modal.length === 0 || $modalImg.length === 0) return;
+            $modalImg.attr("src", src);
+            $modal.addClass("show").attr("aria-hidden", "false");
         };
         /** 关闭预览模态层并清理状态 */
         const closePreview = () => {
-            if (!modal || !modalImg) return;
-            modal.classList.remove("show");
-            modal.setAttribute("aria-hidden", "true");
-            modalImg.src = "";
+            if ($modal.length === 0 || $modalImg.length === 0) return;
+            $modal.removeClass("show").attr("aria-hidden", "true");
+            $modalImg.attr("src", "");
         };
-        const imagesBox = document.getElementById("images");
-        if (imagesBox) {
-            imagesBox.addEventListener("click", ev => {
-                const thumb = ev.target.closest(".thumb");
-                if (!thumb) return;
-                const img = thumb.querySelector("img");
-                if (img && img.src) openPreview(img.src);
-            });
-        }
-        if (closeBtn) closeBtn.addEventListener("click", closePreview);
-        if (modal) {
-            modal.addEventListener("click", ev => {
-                if (ev.target === modal) closePreview();
+        $("#images").on("click", ".thumb", function (ev) {
+            const $img = $(this).find("img");
+            const src = $img.attr("src");
+            if (src) openPreview(src);
+        });
+        if ($closeBtn.length) $closeBtn.on("click", closePreview);
+        if ($modal.length) {
+            $modal.on("click", ev => {
+                if (ev.target === $modal.get(0)) closePreview();
             });
         }
         // 进度模态关闭交互：按钮与点击遮罩
         const closeProgress = () => progressLog.hide();
-        if (progressCloseBtn)
-            progressCloseBtn.addEventListener("click", closeProgress);
-        if (progressModal) {
-            progressModal.addEventListener("click", ev => {
-                if (ev.target === progressModal) closeProgress();
+        if ($progressCloseBtn.length) $progressCloseBtn.on("click", closeProgress);
+        if ($progressModal.length) {
+            $progressModal.on("click", ev => {
+                if (ev.target === $progressModal.get(0)) closeProgress();
             });
         }
         // 返回顶部按钮：滚动时显示，点击平滑回顶
-        const backTopBtn = document.getElementById("back-to-top");
-        if (backTopBtn) {
+        const $backTopBtn = $("#back-to-top");
+        if ($backTopBtn.length) {
             const toggleBackTop = () => {
-                const show = window.scrollY > 200;
-                backTopBtn.classList.toggle("is-visible", show);
+                const show = ($(window).scrollTop() || 0) > 200;
+                $backTopBtn.toggleClass("is-visible", show);
             };
-            window.addEventListener("scroll", toggleBackTop, {passive: true});
-            window.addEventListener("resize", toggleBackTop);
+            $(window).on("scroll", toggleBackTop);
+            $(window).on("resize", toggleBackTop);
             toggleBackTop();
-            backTopBtn.addEventListener("click", ev => {
+            $backTopBtn.on("click", ev => {
                 ev.preventDefault();
-                window.scrollTo({top: 0, behavior: "smooth"});
+                window.scrollTo({ top: 0, behavior: "smooth" });
             });
         }
-        document.addEventListener("keydown", ev => {
+        $(document).on("keydown", ev => {
             if (ev.key === "Escape") {
                 closePreview();
                 closeProgress();
