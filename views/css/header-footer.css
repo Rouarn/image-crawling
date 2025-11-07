@@ -1,0 +1,42 @@
+/* ========================= 头部与页脚 ========================= */
+.site-header {
+  background: linear-gradient(90deg, #2b7cff, #845ef7);
+  color: #fff;
+  padding: 14px 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.toggle {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.hero {
+  background: linear-gradient(180deg, #ffffff, #f8f9fb);
+}
+
+.site-footer {
+  margin-top: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+}
+.site-footer span {
+  color: var(--muted);
+  font-size: 13px;
+}

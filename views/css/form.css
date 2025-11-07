@@ -1,0 +1,96 @@
+/* ========================= 表单与控件 ========================= */
+form#crawl-form {
+  display: block;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 780px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+label {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  font-size: 13px;
+  color: #333;
+}
+label small {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+input,
+.images-toolbar .search,
+.images-controls .dir-select {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid #cfd6df;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+textarea {
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid #cfd6df;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  resize: vertical;
+  min-height: 90px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+input:focus,
+.images-toolbar .search:focus,
+.images-controls .dir-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.15);
+}
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.15);
+}
+button[type="submit"] {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+button[type="submit"]:hover {
+  background: var(--primary-dark);
+}
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.status {
+  margin-left: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  flex: 1;
+}
+.status.ok {
+  color: #2e7d32;
+}
+.status.error {
+  color: #d32f2f;
+}

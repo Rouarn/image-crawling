@@ -1,0 +1,33 @@
+/* ========================= 高级字段：自定义请求头 ========================= */
+.headers-field {
+  position: relative;
+  padding: 10px 12px;
+  margin-top: 20px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(132, 94, 247, 0.06),
+    rgba(132, 94, 247, 0.02)
+  );
+}
+.headers-field textarea { background: #fbfdff; }
+.headers-field::before {
+  content: "高级配置";
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  font-size: 11px;
+  color: #845ef7;
+  background: var(--card-bg);
+  padding: 0 6px;
+  border-radius: 6px;
+}
+body.dark .headers-field {
+  background: linear-gradient(
+    180deg,
+    rgba(132, 94, 247, 0.08),
+    rgba(132, 94, 247, 0.03)
+  );
+}
+body.dark .headers-field textarea { background: #0d1116; }

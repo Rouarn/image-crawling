@@ -113,7 +113,12 @@
               </div>
               <div class="form-actions">
                 <button type="submit">开始抓取</button>
-                <span id="status" class="status"></span>
+                <span
+                  id="status"
+                  class="status"
+                  role="status"
+                  aria-live="polite"
+                ></span>
               </div>
 
               <!-- 进度日志已移动到模态层中显示 -->
@@ -142,14 +147,15 @@
             <div class="card-header">
               <h2>已下载图片</h2>
               <div class="images-toolbar">
-                  <label for="images-filter">
-                      <input
-                          id="images-filter"
-                          class="search"
-                          type="search"
-                          placeholder="按文件名筛选..."
-                      />
-                  </label>
+                <label for="images-filter">
+                  <input
+                    id="images-filter"
+                    class="search"
+                    type="search"
+                    placeholder="按文件名筛选..."
+                    autocomplete="off"
+                  />
+                </label>
               </div>
             </div>
             <!--
@@ -170,9 +176,41 @@
         role="dialog"
         aria-label="图片预览"
       >
-        <div class="modal-inner">
+        <!-- 顶部信息条：文件名、当前位置、尺寸 -->
+        <div class="preview-topbar" aria-label="预览信息">
+          <div class="preview-meta">
+            <span id="preview-name" class="name"></span>
+            <!-- 图片尺寸大小 -->
+            <span id="preview-size" class="size"></span>
+          </div>
           <button class="close" aria-label="关闭预览">×</button>
-          <img id="preview-img" alt="预览图"  src=""/>
+        </div>
+        <div class="modal-inner">
+          <img id="preview-img" alt="预览图" src="" />
+        </div>
+        <!-- 底部操作条：上一张/下一张、打开原图 -->
+        <div class="preview-bottombar" aria-label="预览操作">
+          <button id="preview-prev" class="btn-circle" aria-label="上一张">
+            ‹
+          </button>
+          <div class="preview-center">
+            <span id="preview-index" class="pager"></span>
+            <div class="preview-actions">
+              <a
+                id="preview-open"
+                class="action"
+                target="_blank"
+                rel="noopener"
+              >
+                打开原图
+              </a>
+            </div>
+            <!-- 图片内存大小 -->
+            <span id="preview-mem" class="mem"></span>
+          </div>
+          <button id="preview-next" class="btn-circle" aria-label="下一张">
+            ›
+          </button>
         </div>
       </div>
 
@@ -204,7 +242,8 @@
       - 处理 /api/crawl 提交并刷新图片列表；
       - 缩略图点击预览与 ESC 关闭。
     -->
-    <script src="./js/main.js" defer></script>
+    <script src="./js/jquery-3.7.1.min.js"></script>
+    <script type="module" src="./js/main.js"></script>
     <!-- 返回顶部按钮（右下角悬浮） -->
     <button id="back-to-top" class="back-to-top" aria-label="返回顶部">
       ↑

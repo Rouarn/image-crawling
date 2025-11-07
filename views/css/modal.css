@@ -1,0 +1,193 @@
+/* ========================= 模态层预览 ========================= */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal.show {
+  display: flex;
+}
+.modal.show .modal-inner {
+  animation: pop 160ms ease-out;
+}
+.modal-inner {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+}
+.modal-inner img {
+  display: block;
+  max-width: 86vw;
+  max-height: 80vh;
+  border-radius: 8px;
+}
+.preview-topbar,
+.preview-bottombar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  padding: 10px 14px;
+  z-index: 1011;
+}
+.preview-topbar { top: 0; }
+.preview-bottombar { bottom: 0; }
+.preview-topbar .preview-meta,
+.preview-bottombar .preview-actions {
+  width: 100%;
+  max-width: 980px;
+  background: rgba(18, 22, 27, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+@supports (backdrop-filter: blur(6px)) {
+  .preview-topbar .preview-meta,
+  .preview-bottombar .preview-actions {
+    backdrop-filter: saturate(160%) blur(8px);
+    background: rgba(18, 22, 27, 0.6);
+  }
+}
+body.dark .preview-topbar .preview-meta,
+body.dark .preview-bottombar .preview-actions {
+  background: rgba(18, 22, 27, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+.preview-bottombar {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  gap: 10px;
+}
+.preview-topbar {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+.preview-bottombar .preview-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 980px;
+  background: rgba(18, 22, 27, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+.preview-bottombar .preview-center .mem {
+  text-align: center;
+  min-width: 60px;
+  color: #a3a9b6;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+.preview-bottombar .pager {
+  text-align: center;
+  min-width: 60px;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+.preview-bottombar .preview-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.btn-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+.btn-circle:hover { background: #f1f5f9; }
+body.dark .btn-circle { background: #12161a; border-color: #2e333a; }
+.preview-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.preview-meta .name {
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preview-meta .size {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+.preview-actions .action {
+  font-size: 12px;
+  color: #eaf2ff;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+.preview-actions .action:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+.preview-actions .action::after { content: "↗"; margin-left: 6px; font-size: 12px; opacity: 0.85; }
+.modal .close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  border-radius: 20px;
+  width: 28px;
+  height: 28px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+}
+.preview-topbar .close {
+  position: static;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+#preview-modal { background: rgba(8, 10, 12, 0.92); }
+#preview-modal .modal-inner { background: transparent; border: none; box-shadow: none; }
+#preview-modal .btn-circle { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); color: #fff; }
+#preview-modal .btn-circle:hover { background: rgba(255, 255, 255, 0.16); }
+#preview-modal .preview-meta .name { color: #fff; }
+#preview-modal .modal-inner img { max-width: 90vw; max-height: calc(100vh - 220px); border-radius: 8px; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6); }
+.modal .close:hover { background: var(--primary); color: #fff; }
