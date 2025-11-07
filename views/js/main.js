@@ -13,20 +13,30 @@
 */
 
 (function () {
+    // 基础工具：选择器缓存与节流
+    const $doc = $(document);
+    const $win = $(window);
+    const $body = $(document.body);
+    const debounce = (fn, wait = 150) => {
+        let t;
+        return function (...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), wait);
+        };
+    };
     /** 渲染骨架屏占位（使用 jQuery） */
     function renderSkeleton(box, count = 8) {
         if (!box) return;
         const $box = $(box);
-        $box.empty();
+        let html = "";
         for (let i = 0; i < count; i++) {
-            const $div = $("<div/>").addClass("thumb");
-            const $sk = $("<div/>").addClass("skeleton skeleton-thumb");
-            const $cap = $("<div/>")
-                .addClass("skeleton")
-                .css({ height: "12px", borderRadius: "6px", marginTop: "8px" });
-            $div.append($sk).append($cap);
-            $box.append($div);
+            html +=
+                '<div class="thumb">' +
+                '<div class="skeleton skeleton-thumb"></div>' +
+                '<div class="skeleton" style="height:12px;border-radius:6px;margin-top:8px"></div>' +
+                '</div>';
         }
+        $box.html(html);
     }
 
     /** 根据输入框内容筛选当前缩略图（使用 jQuery） */
@@ -55,14 +65,14 @@
             const $modal = $("#progress-modal");
             if ($box.length === 0 || $modal.length === 0) return;
             $box.removeClass("hidden").css("display", "");
-            $modal.addClass("show").attr("aria-hidden", "false");
+            $modal.addClass("show").attr({ "aria-hidden": "false", "aria-modal": "true" });
         },
         hide() {
             const $box = this.getBox();
             const $modal = $("#progress-modal");
             if ($box.length === 0 || $modal.length === 0) return;
             $box.addClass("hidden").css("display", "none");
-            $modal.removeClass("show").attr("aria-hidden", "true");
+            $modal.removeClass("show").attr({ "aria-hidden": "true", "aria-modal": "false" });
         },
         clear() {
             const $box = this.getBox();
@@ -170,8 +180,9 @@
                                 });
                                 // jQuery.ajax resolves on HTTP 2xx; remove element
                                 $(element).remove();
-                                    byName.get(active).splice(byName.get(active).indexOf(filename), 1);
-                                
+                                byName.get(active).splice(byName.get(active).indexOf(filename), 1);
+                                applyFilter();
+
                             } catch (e) {
                                 const msg = e?.responseJSON?.error || e?.statusText || (e?.message || e);
                                 alert(`删除失败：${msg}`);
@@ -209,7 +220,8 @@
                                 data: JSON.stringify({ name: filename }),
                             });
                             $(element).remove();
-                                data.files.splice(data.files.indexOf(filename), 1);
+                            data.files.splice(data.files.indexOf(filename), 1);
+                            applyFilter();
                         } catch (e) {
                             const msg = e?.responseJSON?.error || e?.statusText || (e?.message || e);
                             alert(`删除失败：${msg}`);
@@ -478,16 +490,15 @@
 
     $(function () {
         setupForm();
-        loadImages().then(() => {
-        });
+        loadImages().then(() => {});
         // 筛选交互
         const $input = $("#images-filter");
-        if ($input.length) $input.on("input", applyFilter);
+        if ($input.length) $input.on("input", debounce(applyFilter, 120));
         // 主题初始化与切换
         const $btnTheme = $("#theme-toggle");
         /** 切换主题并持久化到 localStorage */
         const applyTheme = theme => {
-            $(document.body).toggleClass("dark", theme === "dark");
+            $body.toggleClass("dark", theme === "dark");
             localStorage.setItem("theme", theme);
             if ($btnTheme.length) $btnTheme.text(theme === "dark" ? "☀️" : "🌙");
         };
@@ -495,7 +506,7 @@
         applyTheme(saved);
         if ($btnTheme.length) {
             $btnTheme.on("click", () => {
-                const current = $(document.body).hasClass("dark") ? "dark" : "light";
+                const current = $body.hasClass("dark") ? "dark" : "light";
                 applyTheme(current === "dark" ? "light" : "dark");
             });
         }
@@ -511,12 +522,12 @@
         const openPreview = src => {
             if ($modal.length === 0 || $modalImg.length === 0) return;
             $modalImg.attr("src", src);
-            $modal.addClass("show").attr("aria-hidden", "false");
+            $modal.addClass("show").attr({ "aria-hidden": "false", "aria-modal": "true" });
         };
         /** 关闭预览模态层并清理状态 */
         const closePreview = () => {
             if ($modal.length === 0 || $modalImg.length === 0) return;
-            $modal.removeClass("show").attr("aria-hidden", "true");
+            $modal.removeClass("show").attr({ "aria-hidden": "true", "aria-modal": "false" });
             $modalImg.attr("src", "");
         };
         $("#images").on("click", ".thumb", function (ev) {
@@ -542,18 +553,18 @@
         const $backTopBtn = $("#back-to-top");
         if ($backTopBtn.length) {
             const toggleBackTop = () => {
-                const show = ($(window).scrollTop() || 0) > 200;
+                const show = ($win.scrollTop() || 0) > 200;
                 $backTopBtn.toggleClass("is-visible", show);
             };
-            $(window).on("scroll", toggleBackTop);
-            $(window).on("resize", toggleBackTop);
+            $win.on("scroll", toggleBackTop);
+            $win.on("resize", toggleBackTop);
             toggleBackTop();
             $backTopBtn.on("click", ev => {
                 ev.preventDefault();
                 window.scrollTo({ top: 0, behavior: "smooth" });
             });
         }
-        $(document).on("keydown", ev => {
+        $doc.on("keydown", ev => {
             if (ev.key === "Escape") {
                 closePreview();
                 closeProgress();

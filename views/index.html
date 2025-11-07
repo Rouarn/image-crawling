@@ -113,7 +113,7 @@
               </div>
               <div class="form-actions">
                 <button type="submit">开始抓取</button>
-                <span id="status" class="status"></span>
+                <span id="status" class="status" role="status" aria-live="polite"></span>
               </div>
 
               <!-- 进度日志已移动到模态层中显示 -->
@@ -148,6 +148,7 @@
                     class="search"
                     type="search"
                     placeholder="按文件名筛选..."
+                    autocomplete="off"
                   />
                 </label>
               </div>
