@@ -8,7 +8,7 @@
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📸</text></svg>"
     />
-    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="./css/main.css" />
   </head>
   <body>
     <!-- 站点头部：品牌与主题切换 -->
@@ -70,7 +70,7 @@
                   <small>每页抓取之间的等待时间</small>
                 </label>
                 <label>
-                  <div class="field-inline">
+                  <span class="field-inline">
                     <span>分页模式 (可选)</span>
                     <span
                       id="insert-page-placeholder"
@@ -79,7 +79,7 @@
                     >
                       插入{page}
                     </span>
-                  </div>
+                  </span>
                   <input
                     name="pagePattern"
                     placeholder="https://site.com/list?page={page}"
@@ -142,12 +142,14 @@
             <div class="card-header">
               <h2>已下载图片</h2>
               <div class="images-toolbar">
-                <input
-                  id="images-filter"
-                  class="search"
-                  type="search"
-                  placeholder="按文件名筛选..."
-                />
+                  <label for="images-filter">
+                      <input
+                          id="images-filter"
+                          class="search"
+                          type="search"
+                          placeholder="按文件名筛选..."
+                      />
+                  </label>
               </div>
             </div>
             <!--
@@ -170,7 +172,7 @@
       >
         <div class="modal-inner">
           <button class="close" aria-label="关闭预览">×</button>
-          <img id="preview-img" alt="预览图" />
+          <img id="preview-img" alt="预览图"  src=""/>
         </div>
       </div>
 
