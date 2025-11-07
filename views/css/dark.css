@@ -1,0 +1,21 @@
+/* ========================= 暗色主题 ========================= */
+body.dark {
+  --bg: #121417;
+  --text: #e6e8eb;
+  --muted: #98a2b3;
+  --border: #2e333a;
+  --card-bg: #171a1f;
+}
+/* 深色模式下的 Hero 渐变覆盖，避免白色背景突兀 */
+body.dark .hero { background: linear-gradient(180deg, #1a1f24, #14181c); }
+body.dark input,
+body.dark .images-toolbar .search,
+body.dark .images-controls .dir-select {
+  background: #101317;
+  color: var(--text);
+  border-color: #2e333a;
+}
+body.dark textarea { background: #101317; color: var(--text); border-color: #2e333a; }
+body.dark .thumb { background: #1a1f24; border-color: #2e333a; }
+body.dark .card { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); }
+body.dark .site-footer { background: rgba(24, 28, 32, 0.7); }

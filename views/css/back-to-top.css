@@ -1,0 +1,51 @@
+/* ========================= 返回顶部按钮 ========================= */
+.back-to-top {
+  position: fixed;
+  right: 22px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, var(--primary), #845ef7);
+  color: #fff;
+  font-size: 18px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, filter 0.12s ease;
+  z-index: 900; /* 低于模态层，避免遮挡 */
+}
+.back-to-top:hover { filter: brightness(0.95); }
+.back-to-top.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.back-to-top:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.25), 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+@media (hover: hover) {
+  .back-to-top::after {
+    content: "返回顶部";
+    position: absolute;
+    right: 54px;
+    bottom: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+    color: #fff;
+    background: rgba(18, 22, 26, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(4px);
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  .back-to-top:hover::after { opacity: 1; transform: translateY(0); }
+}
+/* 暗色主题下的细节优化 */
+body.dark .back-to-top { border-color: #2e333a; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); }
+body.dark .back-to-top::after { background: rgba(16, 19, 23, 0.95); border-color: #2e333a; }

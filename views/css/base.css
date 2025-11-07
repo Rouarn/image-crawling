@@ -1,0 +1,25 @@
+/* ========================= 基础与主题 ========================= */
+:root {
+  --bg: #f6f7f9;
+  --text: #222;
+  --muted: #667085;
+  --primary: #2b7cff;
+  --primary-dark: #1a5fe0;
+  --border: #e0e3e7;
+  --card-bg: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    "Microsoft YaHei";
+  background: var(--bg);
+  color: var(--text);
+}
