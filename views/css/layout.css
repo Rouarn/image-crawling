@@ -2,51 +2,135 @@
 .container {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 var(--space-md);
 }
+
 main {
   max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 16px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-md);
 }
+
 .section {
-  margin-top: 24px;
+  margin-top: var(--space-lg);
 }
+
 .section:first-child {
   margin-top: 0;
 }
+
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  transition:
+    box-shadow var(--transition-normal),
+    transform var(--transition-fast);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
 }
 
 /* 双栏主结构 */
 .layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 22px;
+  gap: var(--space-lg);
   align-items: start;
 }
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 340px 1fr;
+    gap: var(--space-md);
+  }
+}
+
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
   }
 }
+
 .sidebar {
   position: sticky;
-  top: 16px;
+  top: var(--space-lg);
   align-self: start;
   height: fit-content;
   z-index: 1;
 }
+
 .content {
   position: relative;
 }
+
 @media (max-width: 960px) {
   .sidebar {
     position: static;
+  }
+}
+
+/* 网格布局 */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 弹性布局工具类 */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+/* 响应式工具类 */
+@media (max-width: 640px) {
+  .sm\:block {
+    display: block;
+  }
+
+  .sm\:flex {
+    display: flex;
+  }
+
+  .sm\:w-full {
+    width: 100%;
   }
 }

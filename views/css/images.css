@@ -1,152 +1,271 @@
 /* ========================= 图片列表与工具栏 ========================= */
 h2 {
-  font-size: 16px;
-  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-sm);
+  color: var(--text);
 }
+
 p.muted {
-  font-size: 13px;
+  font-size: 0.875rem;
   color: var(--muted);
-  margin: 6px 0 12px;
+  margin: var(--space-xs) 0 var(--space-md);
+  line-height: 1.5;
 }
+
 /* 使用说明列表样式 */
 .guides {
-  margin: 8px 0 0;
-  padding-left: 18px;
+  margin: var(--space-sm) 0 0;
+  padding-left: var(--space-lg);
   color: var(--muted);
-  font-size: 13px;
+  font-size: 0.875rem;
   line-height: 1.6;
   list-style: disc;
 }
+
 .guides li {
-  margin: 4px 0;
+  margin: var(--space-xs) 0;
 }
 
+/* 卡片头部 */
 .card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
 }
+
+/* 图片工具栏 */
 .images-toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-.images-toolbar .search {
-  width: 220px;
-  max-width: 40vw;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
+.images-toolbar .search {
+  width: 240px;
+  max-width: 40vw;
+  min-width: 150px;
+}
+
+/* 图片目录控制 */
 .images-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin: 6px 0 12px;
-  max-height: 150px;
+  gap: var(--space-xs);
+  margin: var(--space-xs) 0 var(--space-md);
+  max-height: 120px;
   overflow-y: auto;
+  padding: var(--space-xs);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
 }
+
 .images-controls .tab {
-  padding: 6px 10px;
-  font-size: 13px;
-  color: #334155;
-  background: #f1f5f9;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
+  transition: all var(--transition-fast);
 }
+
 .images-controls .tab:hover {
-  filter: brightness(0.97);
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border-color: var(--primary);
+  transform: translateY(-1px);
 }
+
 .images-controls .tab.active {
   background: var(--primary);
   border-color: var(--primary);
   color: #fff;
+  box-shadow: var(--shadow-sm);
 }
-/* 暗色下标签样式覆盖 */
+
+/* 图片网格 */
+.images {
+  column-width: 160px;
+  column-gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+@media (max-width: 960px) {
+  .images {
+    column-width: 180px;
+  }
+}
+
+@media (max-width: 640px) {
+  .images {
+    column-width: 140px;
+    column-gap: var(--space-sm);
+  }
+}
+
+/* 缩略图样式 */
+.thumb {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: var(--space-sm);
+  transition: all var(--transition-normal);
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 var(--space-md);
+  break-inside: avoid;
+  position: relative;
+  cursor: pointer;
+}
+
+.thumb:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+}
+
+.thumb img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-normal);
+}
+
+.thumb:hover img {
+  transform: scale(1.02);
+}
+
+.thumb div {
+  font-size: 0.75rem;
+  margin-top: var(--space-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+/* 缩略图删除按钮 */
+.thumb .delete-btn {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--error);
+  border-radius: var(--radius-full);
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.thumb:hover .delete-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.thumb .delete-btn:hover {
+  background: #fee2e2;
+  border-color: var(--error);
+  transform: scale(1.1);
+}
+
+/* 空状态 */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+/* 错误状态 */
+.error-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  color: var(--error);
+  font-size: 0.875rem;
+}
+
+.error-state p {
+  margin: 0;
+}
+
+/* 图片加载状态 */
+.thumb {
+  transition: all var(--transition-normal);
+}
+
+.thumb.loaded {
+  border-color: var(--border-light);
+}
+
+.thumb.error {
+  border-color: var(--error);
+}
+
+.thumb.error img {
+  filter: grayscale(100%);
+}
+
+/* 暗色模式下的额外样式 */
 body.dark .images-controls .tab {
-  background: #12161a;
-  color: #cbd5e1;
-  border-color: #2e333a;
+  background: var(--bg);
+  color: var(--text-secondary);
+  border-color: var(--border);
 }
+
+body.dark .images-controls .tab:hover {
+  background: var(--primary-dark);
+  color: #fff;
+  border-color: var(--primary-dark);
+}
+
 body.dark .images-controls .tab.active {
   background: var(--primary);
   border-color: var(--primary);
   color: #fff;
 }
 
-.images {
-  column-width: 150px;
-  column-gap: 14px;
-}
-@media (max-width: 960px) {
-  .images {
-    column-width: 180px;
-  }
-}
-@media (max-width: 640px) {
-  .images {
-    column-width: 160px;
-  }
-}
-.thumb {
-  background: #fafafa;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  overflow: hidden;
-  padding: 10px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  display: inline-block;
-  width: 100%;
-  margin: 0 0 14px;
-  break-inside: avoid;
-  position: relative;
-}
-.thumb:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-}
-.thumb img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-radius: 8px;
-}
-.thumb div {
-  font-size: 12px;
-  margin-top: 6px;
-  color: #444;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+body.dark .thumb .delete-btn {
+  background: var(--bg);
+  color: var(--error);
+  border-color: var(--border);
 }
 
-/* 缩略图删除按钮 */
-.thumb .delete-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
-  color: #d32f2f;
-  border-radius: 16px;
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+body.dark .thumb .delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--error);
 }
-.thumb .delete-btn:hover {
-  background: #fee2e2;
-  border-color: #ef4444;
+
+body.dark .empty-state {
+  color: var(--muted);
 }
-body.dark .thumb .delete-btn {
-  background: #12161a;
-  color: #ef4444;
-  border-color: #2e333a;
+
+body.dark .error-state {
+  color: var(--error);
 }

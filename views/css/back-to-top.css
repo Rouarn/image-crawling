@@ -1,51 +1,80 @@
 /* ========================= 返回顶部按钮 ========================= */
 .back-to-top {
   position: fixed;
-  right: 22px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
+  right: var(--space-md);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-md));
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
   border: 1px solid transparent;
-  background: linear-gradient(135deg, var(--primary), #845ef7);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
-  font-size: 18px;
+  font-size: 1.125rem;
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   transform: translateY(16px) scale(0.96);
   pointer-events: none;
-  transition: opacity 0.18s ease, transform 0.18s ease, filter 0.12s ease;
+  transition: all var(--transition-normal);
   z-index: 900; /* 低于模态层，避免遮挡 */
 }
-.back-to-top:hover { filter: brightness(0.95); }
-.back-to-top.is-visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+.back-to-top:hover {
+  filter: brightness(0.95);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.back-to-top.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
 .back-to-top:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.25), 0 10px 24px rgba(0, 0, 0, 0.16);
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.25),
+    var(--shadow-lg);
 }
+
+/* 悬停提示 */
 @media (hover: hover) {
   .back-to-top::after {
     content: "返回顶部";
     position: absolute;
-    right: 54px;
-    bottom: 6px;
-    padding: 6px 8px;
-    font-size: 12px;
+    right: 56px;
+    bottom: 8px;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
     color: #fff;
     background: rgba(18, 22, 26, 0.9);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     white-space: nowrap;
     opacity: 0;
     transform: translateY(4px);
     pointer-events: none;
-    transition: opacity 0.12s ease, transform 0.12s ease;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-md);
   }
-  .back-to-top:hover::after { opacity: 1; transform: translateY(0); }
+
+  .back-to-top:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 /* 暗色主题下的细节优化 */
-body.dark .back-to-top { border-color: #2e333a; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); }
-body.dark .back-to-top::after { background: rgba(16, 19, 23, 0.95); border-color: #2e333a; }
+body.dark .back-to-top {
+  border-color: var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+body.dark .back-to-top::after {
+  background: rgba(16, 19, 23, 0.95);
+  border-color: var(--border);
+}
