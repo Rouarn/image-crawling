@@ -110,43 +110,88 @@ function filenameFromUrl(u) {
  * @returns {Promise<string>} 保存的文件名
  */
 async function downloadImage(u, outDir, usedNames, options) {
+  // 1. 处理 Base64 图片
+  if (u.startsWith("data:image/")) {
+    try {
+      const matches = u.match(/^data:(image\/([a-zA-Z+]+));base64,(.+)$/);
+      if (!matches) {
+        throw new Error("Invalid base64 image format");
+      }
+      
+      const mimeType = matches[1];
+      const extension = matches[2].replace("jpeg", "jpg").replace("svg+xml", "svg"); // 简单映射
+      const data = matches[3];
+      const buffer = Buffer.from(data, "base64");
+      
+      // 生成文件名：base64_时间戳_序号
+      // 为了保证唯一性，依然使用 usedNames 检查机制，但 base64 通常没有文件名，所以生成一个基础名
+      const timestamp = Date.now();
+      let name = `base64_${timestamp}`;
+      let final = `${name}.${extension}`;
+      let i = 1;
+      
+      while (usedNames.has(final)) {
+        final = `${name}_${i}.${extension}`;
+        i++;
+      }
+      usedNames.add(final);
+      
+      const outPath = path.join(outDir, final);
+      await fs.promises.writeFile(outPath, buffer);
+      console.log(`已保存Base64图片：${final}`);
+      return final;
+    } catch (e) {
+      console.error(`Base64图片保存失败：`, e.message);
+      // 记录错误但不中断，或者返回 null
+      // 根据 downloadAll 的逻辑，抛出异常会被捕获并打印
+      throw e; 
+    }
+  }
+
+  // 2. 处理普通 URL 图片
   const controller = new AbortController();
-  const timeoutMs = options?.fetchTimeoutMs || 15000;
+  // 增加默认超时时间到 60s，因为现在包含了下载过程
+  const timeoutMs = Number(options?.fetchTimeoutMs || 60000);
   const t = setTimeout(() => controller.abort(), timeoutMs);
 
-  // 优先使用外部传入的页面 Referer，未提供则回退为图片源站
-  const referer = options?.referer || new URL(u).origin;
-  const headers = defaultHeaders("image", referer);
+  try {
+    // 优先使用外部传入的页面 Referer，未提供则回退为图片源站
+    const referer = options?.referer || new URL(u).origin;
+    const headers = defaultHeaders("image", referer);
 
-  // 合并用户自定义头
-  const finalHeaders = mergeHeaders(headers, options?.headers);
+    // 合并用户自定义头
+    const finalHeaders = mergeHeaders(headers, options?.headers);
 
-  const res = await fetch(u, {
-    headers: finalHeaders,
-    signal: controller.signal,
-  });
-  clearTimeout(t);
-  if (!res.ok || !res.body)
-    throw new Error(`HTTP ${res.status} ${res.statusText}`);
-  let name = filenameFromUrl(u);
-  const hasExt = path.extname(name);
-  const ct = res.headers.get("content-type");
-  const guessedExt = extFromContentType(ct);
-  if (!hasExt && guessedExt) {
-    name = `${name}.${guessedExt}`;
+    const res = await fetch(u, {
+      headers: finalHeaders,
+      signal: controller.signal,
+    });
+    
+    if (!res.ok || !res.body)
+      throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      
+    let name = filenameFromUrl(u);
+    const hasExt = path.extname(name);
+    const ct = res.headers.get("content-type");
+    const guessedExt = extFromContentType(ct);
+    if (!hasExt && guessedExt) {
+      name = `${name}.${guessedExt}`;
+    }
+    let final = name;
+    let i = 1;
+    while (usedNames.has(final)) {
+      const parsed = path.parse(name);
+      final = `${parsed.name}-${i}${parsed.ext}`;
+      i++;
+    }
+    usedNames.add(final);
+    const outPath = path.join(outDir, final);
+    await streamPipeline(res.body, fs.createWriteStream(outPath));
+    console.log(`已保存：${final}`);
+    return final;
+  } finally {
+    clearTimeout(t);
   }
-  let final = name;
-  let i = 1;
-  while (usedNames.has(final)) {
-    const parsed = path.parse(name);
-    final = `${parsed.name}-${i}${parsed.ext}`;
-    i++;
-  }
-  usedNames.add(final);
-  const outPath = path.join(outDir, final);
-  await streamPipeline(res.body, fs.createWriteStream(outPath));
-  console.log(`已保存：${final}`);
-  return final;
 }
 
 /**
@@ -181,7 +226,8 @@ function extractImages($, pageUrl, urlsSet) {
             parseFloat((p.match(/(\d+(?:\.\d+)?)x/i) || [0, 0])[1]) * 100
           ) || 0;
       const abs = toAbs(u);
-      if (abs && !abs.startsWith("data:") && score >= best.score)
+      // 允许 data: 协议
+      if (abs && score >= best.score)
         best = { url: abs, score };
     }
     return best.url;
@@ -196,12 +242,18 @@ function extractImages($, pageUrl, urlsSet) {
       $el.attr("data-lazy"),
       $el.attr("data-url"),
       $el.attr("data-actualsrc"),
+      $el.attr("data-href"),
+      $el.attr("data-lazy-src"),
+      $el.attr("data-source"),
+      $el.attr("original-src"),
+      $el.attr("data-pic-base64"),
       $el.attr("src"),
     ];
     for (const c of candidates) {
       if (!c) continue;
       const abs = toAbs(c);
-      if (abs && !abs.startsWith("data:")) {
+      // 允许 data: 协议
+      if (abs) {
         urlsSet.add(abs);
         break;
       }
@@ -222,7 +274,7 @@ function extractImages($, pageUrl, urlsSet) {
     if (bestUrl) urlsSet.add(bestUrl);
     const img = $pic.find("img").attr("src");
     const abs = img ? toAbs(img) : null;
-    if (abs && !abs.startsWith("data:")) urlsSet.add(abs);
+    if (abs) urlsSet.add(abs);
   });
 
   // noscript 中的图片（部分站点把原图放在 noscript）
@@ -234,7 +286,7 @@ function extractImages($, pageUrl, urlsSet) {
       $x("img").each((__, el) => {
         const src = $x(el).attr("src");
         const abs = src ? toAbs(src) : null;
-        if (abs && !abs.startsWith("data:")) urlsSet.add(abs);
+        if (abs) urlsSet.add(abs);
         const ss = $x(el).attr("srcset");
         const best = ss ? pickFromSrcset(ss) : null;
         if (best) urlsSet.add(best);
@@ -259,7 +311,7 @@ function extractImages($, pageUrl, urlsSet) {
     for (const c of candidates) {
       if (!c) continue;
       const abs = toAbs(c);
-      if (abs && !abs.startsWith("data:")) {
+      if (abs) {
         urlsSet.add(abs);
         break;
       }
@@ -395,6 +447,33 @@ export async function crawlImagesWithPagination(baseUrl, opts) {
         });
       } catch {}
     }
+
+    // 如果开启了 Headless 模式，直接使用 Headless 提取，跳过普通 Fetch
+    if (opts.useHeadless) {
+      console.log("使用 Headless 模式抓取...");
+      try {
+        const more = await extractImagesHeadless(pageUrl, opts);
+        const before = urls.size;
+        for (const u of more) urls.add(u);
+        const after = urls.size;
+        
+        if (typeof opts.onProgress === "function") {
+          try {
+            opts.onProgress({
+              type: "page_done",
+              index: i + 1,
+              total: pages.length,
+              added: after - before,
+            });
+          } catch {}
+        }
+      } catch (e) {
+        console.error("Headless 抓取失败：", e.message || e);
+      }
+      await delay(opts.pageDelayMs || 500);
+      continue;
+    }
+
     const controller = new AbortController();
     const t = setTimeout(
       () => controller.abort(),
@@ -600,23 +679,50 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
       timeout: Number(opts.fetchTimeoutMs || 30000),
     });
     // 滚动触发懒加载
-    const steps = Number(opts.scrollSteps || 12);
-    const waitMs = Number(opts.scrollWaitMs || 500);
-    for (let i = 0; i < steps; i++) {
-      await page.evaluate(ratio => {
-        const h = Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight
-        );
-        const y = Math.round(ratio * h);
-        window.scrollTo({ top: y, behavior: "instant" });
-      }, (i + 1) / steps);
-      if (typeof opts.onProgress === "function") {
-        try {
-          opts.onProgress({ type: "scroll", step: i + 1, total: steps });
-        } catch {}
+    // 改进：使用 scrollBy 循环滚动，确保视口覆盖每个区域，并等待加载
+    const scrollWaitMs = Number(opts.scrollWaitMs || 800);
+    // 自动滚动直到页面底部
+    await page.evaluate(async (waitMs) => {
+      const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+      const scrollStep = () => {
+        // 每次滚动视口高度的 80%
+        const step = Math.floor(window.innerHeight * 0.8);
+        window.scrollBy(0, step);
+        return step;
+      };
+
+      let lastHeight = 0;
+      let noChangeCount = 0;
+      
+      // 最多尝试滚动 50 次，避免无限死循环
+      for (let i = 0; i < 50; i++) {
+        scrollStep();
+        await delay(waitMs);
+        
+        const currentHeight = document.documentElement.scrollHeight;
+        const currentPos = window.scrollY + window.innerHeight;
+
+        // 如果已经到底或者高度不再变化
+        if (currentPos >= currentHeight || currentHeight === lastHeight) {
+          noChangeCount++;
+          // 连续 3 次检测到没有变化/到底部，认为滚动结束
+          if (noChangeCount >= 3) break;
+        } else {
+          noChangeCount = 0;
+        }
+        lastHeight = currentHeight;
       }
-      await delay(waitMs);
+      
+      // 滚回顶部再滚到底部，有时能触发双向懒加载
+      // window.scrollTo(0, 0);
+      // await delay(500);
+      // window.scrollTo(0, document.body.scrollHeight);
+    }, scrollWaitMs);
+
+    if (typeof opts.onProgress === "function") {
+      try {
+        opts.onProgress({ type: "scroll", step: "done", total: "auto" });
+      } catch {}
     }
 
     const urls = await page.evaluate(() => {
@@ -642,31 +748,36 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
           if (mW) score = parseInt(mW[1]) || 0;
           else if (mX) score = Math.round(parseFloat(mX[1]) * 100) || 0;
           const abs = absUrl(u);
-          if (abs && !abs.startsWith("data:") && score >= best.score)
+          if (abs && score >= best.score)
             best = { url: abs, score };
         }
         return best.url;
       };
       // img 懒加载属性
       document.querySelectorAll("img").forEach(img => {
+        // 优先使用 currentSrc (浏览器实际加载的图片)，其次是 src
         const candidates = [
+          img.currentSrc,
+          img.src,
           img.getAttribute("src"),
           img.getAttribute("data-src"),
           img.getAttribute("data-original"),
           img.getAttribute("data-lazy"),
           img.getAttribute("data-url"),
           img.getAttribute("data-actualsrc"),
+          img.getAttribute("data-href"),
+          img.getAttribute("data-lazy-src"),
         ];
         for (const c of candidates) {
           if (!c) continue;
           const abs = absUrl(c);
-          if (abs && !abs.startsWith("data:")) {
+          if (abs) {
             set.add(abs);
             break;
           }
         }
         const best = pickFromSrcset(
-          img.getAttribute("srcset") || img.getAttribute("data-srcset") || ""
+          img.currentSrc ? null : (img.getAttribute("srcset") || img.getAttribute("data-srcset") || "")
         );
         if (best) set.add(best);
       });
@@ -683,7 +794,7 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
           img && img.getAttribute("src")
             ? absUrl(img.getAttribute("src"))
             : null;
-        if (abs && !abs.startsWith("data:")) set.add(abs);
+        if (abs) set.add(abs);
       });
       // noscript
       document.querySelectorAll("noscript").forEach(ns => {
@@ -695,7 +806,7 @@ async function extractImagesHeadless(pageUrl, opts = {}) {
           const abs = img.getAttribute("src")
             ? absUrl(img.getAttribute("src"))
             : null;
-          if (abs && !abs.startsWith("data:")) set.add(abs);
+          if (abs) set.add(abs);
           const best = pickFromSrcset(img.getAttribute("srcset") || "");
           if (best) set.add(best);
         });
