@@ -14,10 +14,7 @@ const streamPipeline = promisify(pipeline);
 
 // 如果 Node 环境类型中缺少全局 fetch 类型定义，则在此添加
 declare global {
-  function fetch(
-    url: RequestInfo,
-    init?: RequestInit,
-  ): Promise<Response>;
+  function fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
 }
 
 @Injectable()
