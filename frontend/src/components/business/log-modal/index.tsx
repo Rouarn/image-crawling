@@ -44,7 +44,6 @@ const LogModal: React.FC<LogModalProps> = ({ visible, logs, onClose }) => {
     >
       <div className="h-96 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 rounded border dark:border-gray-700 font-mono text-sm">
         {logs.map((log, index) => (
-          // eslint-disable-next-line react/no-array-index-key
           <div key={index} className="mb-2 flex items-start gap-2">
             <span className="mt-0.5">{icons[log.type] || <InfoCircleOutlined />}</span>
             <span className="flex-1 text-gray-700 dark:text-gray-300 break-words">{log.message}</span>

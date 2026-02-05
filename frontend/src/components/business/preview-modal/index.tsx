@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Modal, Button } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 
@@ -28,22 +28,22 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
       const img = new Image();
       img.src = `/storage/${image}`;
       img.onload = () => {
-        // Estimate size or fetch from headers if needed, but for now just dimensions
+        // 如果需要，可以估算大小或从请求头获取，目前仅使用尺寸
         setSize(`${img.width}x${img.height}`);
       };
     }
   }, [visible, image]);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!visible) return;
     if (e.key === 'ArrowLeft' && hasPrev) onPrev();
     if (e.key === 'ArrowRight' && hasNext) onNext();
-  };
+  }, [visible, hasPrev, hasNext, onPrev, onNext]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [visible, hasPrev, hasNext]);
+  }, [handleKeyDown]);
 
   return (
     <Modal

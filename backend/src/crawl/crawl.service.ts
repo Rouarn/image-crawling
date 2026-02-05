@@ -12,10 +12,10 @@ import * as puppeteer from 'puppeteer';
 
 const streamPipeline = promisify(pipeline);
 
-// Add global fetch type definition if missing in Node environment types
+// 如果 Node 环境类型中缺少全局 fetch 类型定义，则在此添加
 declare global {
   function fetch(
-    input: RequestInfo | URL,
+    url: RequestInfo,
     init?: RequestInit,
   ): Promise<Response>;
 }
@@ -99,7 +99,7 @@ export class CrawlService {
       try {
         const matches = u.match(/^data:(image\/([a-zA-Z+]+));base64,(.+)$/);
         if (!matches) {
-          throw new Error('Invalid base64 image format');
+          throw new Error('无效的 Base64 图片格式');
         }
 
         const extension = matches[2]
@@ -121,17 +121,17 @@ export class CrawlService {
 
         const outPath = path.join(outDir, final);
         await fs.promises.writeFile(outPath, buffer);
-        this.logger.log(`Saved Base64: ${final}`);
+        this.logger.log(`已保存 Base64: ${final}`);
         return final;
       } catch (e) {
         this.logger.error(
-          `Base64 save failed: ${e instanceof Error ? e.message : String(e)}`,
+          `Base64 保存失败: ${e instanceof Error ? e.message : String(e)}`,
         );
         throw e;
       }
     }
 
-    // 2. Handle Normal URL
+    // 2. 处理普通 URL
     const controller = new AbortController();
     const timeoutMs = Number(options?.fetchTimeoutMs || 60000);
     const t = setTimeout(() => controller.abort(), timeoutMs);
@@ -141,14 +141,14 @@ export class CrawlService {
       const headers = this.defaultHeaders('image', referer);
       const finalHeaders = this.mergeHeaders(headers, options?.headers);
 
-      // Native fetch is available in Node 18+
+      // Node 18+ 原生支持 fetch
       const res = await fetch(u, {
         headers: finalHeaders,
         signal: controller.signal,
       });
 
       if (!res.ok || !res.body)
-        throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        throw new Error(`HTTP 请求失败: ${res.status} ${res.statusText}`);
 
       let name = this.filenameFromUrl(u);
       const hasExt = path.extname(name);
@@ -178,7 +178,7 @@ export class CrawlService {
         res.body as unknown as NodeJS.ReadableStream,
         fs.createWriteStream(outPath),
       );
-      this.logger.log(`Saved: ${final}`);
+      this.logger.log(`已保存: ${final}`);
       return final;
     } finally {
       clearTimeout(t);
@@ -274,7 +274,7 @@ export class CrawlService {
           if (best) urlsSet.add(best);
         });
       } catch {
-        // Ignore parsing errors for noscript content
+        // 忽略 noscript 内容的解析错误
       }
     });
 
@@ -387,12 +387,12 @@ export class CrawlService {
           const name = await this.downloadImage(u, outDir, usedNames, opts);
           saved.push({ url: u, file: name });
           if (onProgress)
-            onProgress(`Saved ${name} (${saved.length}/${list.length})`);
+            onProgress(`已保存 ${name} (${saved.length}/${list.length})`);
         } catch (e) {
           if (e instanceof Error) {
-            this.logger.error(`Download failed: ${u} - ${e.message}`);
+            this.logger.error(`下载失败: ${u} - ${e.message}`);
           } else {
-            this.logger.error(`Download failed: ${u} - ${String(e)}`);
+            this.logger.error(`下载失败: ${u} - ${String(e)}`);
           }
         }
       }
@@ -408,12 +408,12 @@ export class CrawlService {
     let browser: puppeteer.Browser | undefined;
     try {
       browser = await puppeteer.launch({
-        headless: true, // New headless mode
+        headless: true, // 新版无头模式
         args: ['--disable-blink-features=AutomationControlled'],
       });
     } catch (e1) {
       if (e1 instanceof Error) {
-        this.logger.error(`Failed to launch puppeteer: ${e1.message}`);
+        this.logger.error(`启动 Puppeteer 失败: ${e1.message}`);
       }
       return [];
     }
@@ -603,7 +603,7 @@ export class CrawlService {
       return urls;
     } catch (e) {
       if (e instanceof Error) {
-        this.logger.error(`Headless extraction failed: ${e.message}`);
+        this.logger.error(`无头模式提取失败: ${e.message}`);
       }
       return [];
     } finally {
@@ -625,20 +625,20 @@ export class CrawlService {
 
     const urls = new Set<string>();
     const pages = await this.resolvePages(baseUrl, opts);
-    this.logger.log(`Plan to crawl ${pages.length} pages.`);
-    if (onProgress) onProgress(`Plan to crawl ${pages.length} pages.`);
+    this.logger.log(`计划抓取 ${pages.length} 页。`);
+    if (onProgress) onProgress(`计划抓取 ${pages.length} 页。`);
 
-    // Note: onProgress callback logic removed for simplicity in Service,
-    // can be added back if using WebSockets or SSE in Controller.
+    // 注意：为了简化，Service 中移除了 onProgress 回调逻辑，
+    // 如果使用 WebSockets 或 SSE 可以加回来。
 
     for (let i = 0; i < pages.length; i++) {
       const pageUrl = pages[i];
-      this.logger.log(`Crawling page ${i + 1}/${pages.length}: ${pageUrl}`);
+      this.logger.log(`正在抓取第 ${i + 1}/${pages.length} 页: ${pageUrl}`);
       if (onProgress)
-        onProgress(`Crawling page ${i + 1}/${pages.length}: ${pageUrl}`);
+        onProgress(`正在抓取第 ${i + 1}/${pages.length} 页: ${pageUrl}`);
 
       if (opts.useHeadless) {
-        this.logger.log('Using Headless mode...');
+        this.logger.log('使用无头模式...');
         const more = await this.extractImagesHeadless(pageUrl, opts);
         more.forEach((u) => urls.add(u));
         await this.delay(opts.pageDelayMs || 500);
@@ -662,9 +662,9 @@ export class CrawlService {
       } catch (e) {
         clearTimeout(t);
         if (e instanceof Error) {
-          this.logger.error(`Page fetch error: ${e.message}`);
+          this.logger.error(`页面获取错误: ${e.message}`);
         }
-        // Fallback to headless
+        // 回退到无头模式
         const more = await this.extractImagesHeadless(pageUrl, opts);
         more.forEach((u) => urls.add(u));
         await this.delay(opts.pageDelayMs || 500);
@@ -673,8 +673,8 @@ export class CrawlService {
       clearTimeout(t);
 
       if (!pageRes.ok) {
-        this.logger.error(`Page fetch failed: ${pageRes.status}`);
-        // Fallback to headless
+        this.logger.error(`页面获取失败: ${pageRes.status}`);
+        // 回退到无头模式
         const more = await this.extractImagesHeadless(pageUrl, opts);
         more.forEach((u) => urls.add(u));
         await this.delay(opts.pageDelayMs || 500);
@@ -688,8 +688,8 @@ export class CrawlService {
     }
 
     const list = [...urls];
-    this.logger.log(`Found ${list.length} images.`);
-    if (onProgress) onProgress(`Found ${list.length} images.`);
+    this.logger.log(`发现 ${list.length} 张图片。`);
+    if (onProgress) onProgress(`发现 ${list.length} 张图片。`);
 
     // We pass referer as baseUrl to downloadAll
     const saved = await this.downloadAll(
@@ -702,7 +702,7 @@ export class CrawlService {
       onProgress,
     );
 
-    this.logger.log('All done.');
+    this.logger.log('全部完成。');
     return {
       count: list.length,
       saved,

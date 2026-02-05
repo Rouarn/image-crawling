@@ -1,8 +1,8 @@
 /**
- * Debounce function to limit the rate at which a function can fire.
- * @param fn The function to debounce
- * @param wait The wait time in milliseconds
- * @returns A debounced version of the function
+ * 防抖函数，用于限制函数触发频率
+ * @param fn 要防抖的函数
+ * @param wait 等待时间（毫秒）
+ * @returns 防抖后的函数
  */
 export const debounce = <T extends unknown[]>(fn: (...args: T) => void, wait = 150) => {
   let t: ReturnType<typeof setTimeout>;
@@ -13,9 +13,9 @@ export const debounce = <T extends unknown[]>(fn: (...args: T) => void, wait = 1
 };
 
 /**
- * Format bytes into human readable string (B, KB, MB, GB).
- * @param bytes The number of bytes
- * @returns Formatted string
+ * 将字节数格式化为人类可读的字符串 (B, KB, MB, GB)
+ * @param bytes 字节数
+ * @returns 格式化后的字符串
  */
 export const formatBytes = (bytes: number | string | undefined | null): string => {
   const b = Number(bytes || 0);

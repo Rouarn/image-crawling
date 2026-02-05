@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
-import { antdUtils } from '@/utils/antd-global';
+import { antdUtils } from '@/utils/antd-instance';
 
 const config: AxiosRequestConfig = {
   baseURL: '/api',

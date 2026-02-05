@@ -46,9 +46,9 @@ const ImagesGrid: React.FC = () => {
   const handleDelete = async (filename: string) => {
     try {
       await deleteImage(filename);
-      message.success('Deleted successfully');
+      message.success('删除成功');
     } catch {
-      message.error('Failed to delete');
+      message.error('删除失败');
     }
   };
 
@@ -99,7 +99,6 @@ const ImagesGrid: React.FC = () => {
       {loading && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
-            // eslint-disable-next-line react/no-array-index-key
             <SkeletonImage key={i} />
           ))}
         </div>
@@ -111,7 +110,10 @@ const ImagesGrid: React.FC = () => {
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
             {paginatedFiles.map((file) => (
-              <div key={file} className="relative group border rounded p-2 hover:shadow-md transition-shadow">
+              <div
+                key={file}
+                className="relative group border rounded p-2 hover:shadow-md transition-shadow"
+              >
                 <div
                   className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
                   onClick={() => handlePreview(file)}
@@ -124,7 +126,7 @@ const ImagesGrid: React.FC = () => {
                   }}
                 >
                   <img
-                    src={`/storage/${file}?t=${Date.now()}`}
+                    src={`/storage/${file}`}
                     alt={file}
                     loading="lazy"
                     className="max-w-full max-h-full object-contain"
@@ -134,7 +136,7 @@ const ImagesGrid: React.FC = () => {
                   <span className="text-xs truncate flex-1" title={file}>
                     {file}
                   </span>
-                  <Popconfirm title="Delete this image?" onConfirm={() => handleDelete(file)}>
+                  <Popconfirm title="确认删除这张图片吗？" onConfirm={() => handleDelete(file)}>
                     <Button
                       type="text"
                       danger

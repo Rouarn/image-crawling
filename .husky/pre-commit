@@ -1,0 +1,8 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Checking Frontend..."
+pnpm --filter frontend lint
+
+echo "🔍 Checking Backend..."
+pnpm --filter backend lint

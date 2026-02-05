@@ -25,6 +25,9 @@ export const useImageStore = create<ImageState>((set, get) => ({
   loading: false,
   activeGroup: '',
   filter: '',
+  /**
+   * 获取所有图片数据
+   */
   fetchImages: async () => {
     set({ loading: true });
     try {
@@ -50,6 +53,10 @@ export const useImageStore = create<ImageState>((set, get) => ({
   },
   setActiveGroup: (group) => set({ activeGroup: group }),
   setFilter: (filter) => set({ filter }),
+  /**
+   * 删除图片并更新本地状态
+   * @param filename 图片文件名
+   */
   deleteImage: async (filename) => {
     try {
       await request.delete('/images', { data: { name: filename } });

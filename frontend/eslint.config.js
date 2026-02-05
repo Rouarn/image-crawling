@@ -1,47 +1,59 @@
 import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
+import react from 'eslint-plugin-react';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import prettier from 'eslint-config-prettier';
+import { fixupPluginRules } from '@eslint/compat';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-
-const compatConfig = compat.extends('airbnb', 'airbnb-typescript', 'prettier').map(config => {
-  if (config.rules) {
-    delete config.rules['@typescript-eslint/lines-between-class-members'];
-    delete config.rules['@typescript-eslint/no-throw-literal'];
-  }
-  return config;
-});
-
-export default [
+export default tseslint.config(
+  { ignores: ['dist', 'node_modules', 'coverage', 'public'] },
   {
-    ignores: ['dist/', 'node_modules/', 'coverage/', 'eslint.config.js', 'vite.config.ts', 'commitlint.config.js'],
-  },
-  js.configs.recommended,
-  ...compatConfig,
-  ...tseslint.configs.recommended,
-  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
       parserOptions: {
-        project: './tsconfig.app.json',
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: {
+      'react-hooks': fixupPluginRules(reactHooks),
+      'react-refresh': reactRefresh,
+      'jsx-a11y': jsxA11y,
+      react,
+    },
+    settings: {
+      react: {
+        version: 'detect',
       },
     },
     rules: {
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      'no-debugger': 'error',
+      ...reactHooks.configs.recommended.rules,
+      'react-refresh/only-export-components': [
+        'warn',
+        { allowConstantExport: true },
+      ],
+      ...react.configs.recommended.rules,
+      ...react.configs['jsx-runtime'].rules,
+      ...jsxA11y.configs.recommended.rules,
+      
+      // Custom rules
       'react/react-in-jsx-scope': 'off',
-      'import/prefer-default-export': 'off',
-      'import/extensions': 'off',
-      'react/function-component-definition': 'off',
+      'react/prop-types': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
-      'react/require-default-props': 'off',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
-];
+  {
+    files: ['src/router/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  prettier,
+);

@@ -7,13 +7,24 @@ import { CreateCrawlDto } from './dto/create-crawl.dto';
 export class CrawlController {
   constructor(private readonly crawlService: CrawlService) {}
 
+  /**
+   * 创建抓取任务（同步模式）
+   * @param createCrawlDto 抓取配置
+   * @returns 抓取结果
+   */
   @Post()
   async create(@Body() createCrawlDto: CreateCrawlDto) {
-    // Basic sync crawl for now.
-    // Ideally this should be async/queued, but keeping it simple as per original implementation.
+    // 目前使用基本的同步抓取。
+    // 理想情况下应该异步/排队，但为了保持与原始实现一致，保持简单。
     return await this.crawlService.crawl(createCrawlDto.url, createCrawlDto);
   }
 
+  /**
+   * 创建流式抓取任务（SSE）
+   * 通过 Server-Sent Events 实时返回抓取进度
+   * @param query 查询参数形式的抓取配置
+   * @param res Express 响应对象
+   */
   @Get('stream')
   async stream(@Query() query: CreateCrawlDto, @Res() res: Response) {
     res.setHeader('Content-Type', 'text/event-stream');

@@ -24,25 +24,25 @@ const CrawlForm: React.FC = () => {
     Object.entries(values).forEach(([k, v]) => {
       if (v === undefined || v === null || v === '') return;
       if (k === 'headers') {
-         // The form might return a string (from TextArea) or object (if we parsed it, but here it's string from input)
-         // Actually, if it's a string, we should validate it's JSON before sending or send as is?
-         // The original code does: qs.set("headers", JSON.stringify(v)) where v was parsed object.
-         // But here values.headers is likely string from TextArea.
-         // Let's validate JSON.
+         // 表单可能会返回字符串（来自 TextArea）或对象（如果已解析，但此处来自输入框的是字符串）
+         // 实际上，如果是字符串，我们应该在发送前验证它是否为 JSON，还是直接按原样发送？
+         // 原始代码是：qs.set("headers", JSON.stringify(v))，其中 v 是解析后的对象。
+         // 但这里 values.headers 很可能是来自 TextArea 的字符串。
+         // 让我们验证一下 JSON。
          try {
             const parsed = typeof v === 'string' ? JSON.parse(v) : v;
             qs.set(k, JSON.stringify(parsed));
          } catch {
-             // If invalid JSON, maybe just send as string or ignore?
-             // The original code validated it before sending.
-             // AntD form rules can handle validation.
+             // 如果 JSON 无效，可能直接作为字符串发送或忽略？
+             // 原始代码在发送前进行了验证。
+             // AntD 表单规则可以处理验证。
          }
       } else {
         qs.set(k, String(v));
       }
     });
 
-    // Close previous connection if any
+    // 关闭之前的连接（如果有）
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
@@ -56,23 +56,24 @@ const CrawlForm: React.FC = () => {
         const time = new Date().toLocaleTimeString();
 
         if (payload.type === 'error') {
-           setLogs((prev) => [...prev, { type: 'error', message: payload.error || 'Unknown error', time }]);
+           setLogs((prev) => [...prev, { type: 'error', message: payload.error || '未知错误', time }]);
            es.close();
            setLoading(false);
         } else if (payload.type === 'complete') {
-           setLogs((prev) => [...prev, { type: 'complete', message: `Finished: Saved ${payload.saved} images to ${payload.outDir}`, time }]);
+           setLogs((prev) => [...prev, { type: 'complete', message: `完成: 已保存 ${payload.saved} 张图片到 ${payload.outDir}`, time }]);
            es.close();
            setLoading(false);
            fetchImages();
-           message.success('Crawl completed!');
+           message.success('抓取完成！');
         } else {
            let msg = '';
+           // 根据消息类型生成可读的日志消息
            switch (payload.type) {
-             case 'plan': msg = `Plan to crawl ${payload.pages} pages`; break;
-             case 'page': msg = `Crawling page ${payload.index}/${payload.total}: ${payload.url}`; break;
-             case 'fallback': msg = `Fallback to browser rendering: ${payload.reason}`; break;
-             case 'page_done': msg = `Page done, added ${payload.added} images`; break;
-             case 'discover': msg = `Discovered ${payload.count} images`; break;
+             case 'plan': msg = `计划抓取 ${payload.pages} 页`; break;
+             case 'page': msg = `正在抓取第 ${payload.index}/${payload.total} 页: ${payload.url}`; break;
+             case 'fallback': msg = `回退到浏览器渲染: ${payload.reason}`; break;
+             case 'page_done': msg = `页面完成，添加了 ${payload.added} 张图片`; break;
+             case 'discover': msg = `发现了 ${payload.count} 张图片`; break;
              default: msg = JSON.stringify(payload);
            }
            setLogs((prev) => [...prev, { type: payload.type, message: msg, time }]);
@@ -83,7 +84,7 @@ const CrawlForm: React.FC = () => {
     };
 
     es.onerror = () => {
-      setLogs((prev) => [...prev, { type: 'error', message: 'Connection error', time: new Date().toLocaleTimeString() }]);
+      setLogs((prev) => [...prev, { type: 'error', message: '连接错误', time: new Date().toLocaleTimeString() }]);
       es.close();
       setLoading(false);
     };
