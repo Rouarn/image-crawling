@@ -4,6 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
+    "dev": "powershell -ExecutionPolicy Bypass -File ./scripts/start-dev.ps1",
     "prepare": "husky"
   },
   "keywords": [],
@@ -13,6 +14,8 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.1",
     "@commitlint/config-conventional": "^20.4.1",
-    "husky": "^9.1.7"
+    "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
+    "wait-on": "^9.0.3"
   }
 }
