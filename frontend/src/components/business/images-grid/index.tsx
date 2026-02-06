@@ -1,20 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Input, Tabs, Button, Popconfirm, message, Pagination, Empty } from 'antd';
+import { Card, Input, Select, Button, Popconfirm, App, Pagination, Empty, Image } from 'antd';
 import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useImageStore } from '@/store/image-store';
-import PreviewModal from '../preview-modal';
 import { SkeletonImage } from '@/components/ui/skeleton';
 
 const PAGE_SIZE = 50;
 
 const ImagesGrid: React.FC = () => {
+  const { message } = App.useApp();
   const { groups, files, loading, activeGroup, filter, fetchImages, setActiveGroup, setFilter, deleteImage } = useImageStore();
   const [currentPage, setCurrentPage] = useState(1);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchImages();
   }, [fetchImages]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   const currentFiles = useMemo(() => {
     let list: string[] = [];
@@ -52,27 +55,22 @@ const ImagesGrid: React.FC = () => {
     }
   };
 
-  const handlePreview = (image: string) => {
-    setPreviewImage(image);
-  };
-
-  const handlePrev = () => {
-    if (!previewImage) return;
-    const idx = currentFiles.indexOf(previewImage);
-    if (idx > 0) setPreviewImage(currentFiles[idx - 1]);
-  };
-
-  const handleNext = () => {
-    if (!previewImage) return;
-    const idx = currentFiles.indexOf(previewImage);
-    if (idx < currentFiles.length - 1) setPreviewImage(currentFiles[idx + 1]);
-  };
-
   return (
     <Card
       title="已下载图片"
       extra={
         <div className="flex items-center gap-2">
+          {groups.length > 0 && (
+            <Select
+              value={activeGroup}
+              onChange={handleTabChange}
+              style={{ width: 160 }}
+              options={groups.map((g) => ({
+                value: g.dir,
+                label: g.dir === 'root' ? '根目录' : g.dir,
+              }))}
+            />
+          )}
           <Input.Search
             placeholder="按文件名筛选..."
             allowClear
@@ -84,18 +82,6 @@ const ImagesGrid: React.FC = () => {
         </div>
       }
     >
-      {groups.length > 0 && (
-        <Tabs
-          activeKey={activeGroup}
-          onChange={handleTabChange}
-          items={groups.map((g) => ({
-            key: g.dir,
-            label: g.dir === 'root' ? '根目录' : g.dir,
-          }))}
-          className="mb-4"
-        />
-      )}
-
       {loading && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -108,47 +94,39 @@ const ImagesGrid: React.FC = () => {
 
       {!loading && currentFiles.length > 0 && (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-4">
-            {paginatedFiles.map((file) => (
-              <div
-                key={file}
-                className="relative group border rounded p-2 hover:shadow-md transition-shadow"
-              >
+          <Image.PreviewGroup>
+            <div className="columns-2 md:columns-4 lg:columns-6 gap-4 mb-4">
+              {paginatedFiles.map((file) => (
                 <div
-                  className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
-                  onClick={() => handlePreview(file)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      handlePreview(file);
-                    }
-                  }}
+                  key={file}
+                  className="relative group border border-gray-200 rounded p-2 hover:shadow-md transition-shadow break-inside-avoid mb-4"
                 >
-                  <img
-                    src={`/storage/${file}`}
-                    alt={file}
-                    loading="lazy"
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-                <div className="mt-2 flex justify-between items-center">
-                  <span className="text-xs truncate flex-1" title={file}>
-                    {file}
-                  </span>
-                  <Popconfirm title="确认删除这张图片吗？" onConfirm={() => handleDelete(file)}>
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  <div className="bg-gray-100 cursor-pointer overflow-hidden rounded">
+                    <Image
+                      src={`/storage/${file}`}
+                      alt={file}
+                      loading="lazy"
+                      className="w-full h-auto block"
                     />
-                  </Popconfirm>
+                  </div>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-xs truncate flex-1" title={file}>
+                      {file}
+                    </span>
+                    <Popconfirm title="确认删除这张图片吗？" onConfirm={() => handleDelete(file)}>
+                      <Button
+                        type="text"
+                        danger
+                        size="small"
+                        icon={<DeleteOutlined />}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
+                    </Popconfirm>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Image.PreviewGroup>
           <Pagination
             current={currentPage}
             pageSize={PAGE_SIZE}
@@ -160,15 +138,6 @@ const ImagesGrid: React.FC = () => {
         </>
       )}
 
-      <PreviewModal
-        visible={!!previewImage}
-        image={previewImage || ''}
-        onClose={() => setPreviewImage(null)}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        hasPrev={!!previewImage && currentFiles.indexOf(previewImage) > 0}
-        hasNext={!!previewImage && currentFiles.indexOf(previewImage) < currentFiles.length - 1}
-      />
     </Card>
   );
 };

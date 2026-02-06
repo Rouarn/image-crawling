@@ -10,6 +10,14 @@ import AntdGlobalHolder from '@/utils/antd-global';
 const App: React.FC = () => {
   const { isDark } = useThemeStore();
 
+  React.useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
   return (
     <StyleProvider hashPriority="high">
       <ConfigProvider

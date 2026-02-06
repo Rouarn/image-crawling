@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Form, Input, InputNumber, Checkbox, Button, message, Card, Row, Col } from 'antd';
+import { Form, Input, InputNumber, Checkbox, Button, App, Card, Row, Col } from 'antd';
 import type { CrawlOptions } from '@/api/crawl';
 import { deriveOutDir } from './helper';
 import LogModal from '../log-modal';
@@ -8,6 +8,7 @@ import { useImageStore } from '@/store/image-store';
 
 const CrawlForm: React.FC = () => {
   const [form] = Form.useForm();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
   const [autoFilled, setAutoFilled] = useState(false);
   const [logs, setLogs] = useState<LogItem[]>([]);

@@ -7,7 +7,7 @@ import { useThemeStore } from '@/store/theme-store';
 const { Header, Content } = Layout;
 
 const Loading = () => (
-  <div className="flex justify-center items-center h-64">
+  <div className="flex justify-center items-center h-[calc(100vh-94px)]">
     <Spin size="large" />
   </div>
 );
@@ -28,7 +28,10 @@ const MainLayout: React.FC = () => {
           padding: '0 24px',
           background: colorBgContainer,
           boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          zIndex: 10,
+          zIndex: 100,
+          position: 'sticky',
+          top: 0,
+          width: '100%',
         }}
       >
         <div className="text-xl font-bold flex items-center gap-2">
