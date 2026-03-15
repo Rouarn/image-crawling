@@ -20,7 +20,7 @@ const ImagesGrid: React.FC = () => {
   }, [currentPage]);
 
   const currentFiles = useMemo(() => {
-    let list: string[] = [];
+    let list: string[];
     if (groups.length > 0) {
       const group = groups.find((g) => g.dir === activeGroup);
       list = group ? group.files : [];
